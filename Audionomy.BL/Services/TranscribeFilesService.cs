@@ -43,19 +43,19 @@ namespace Audionomy.BL.Services
 
                 progress?.Report(new TranscriptionResult(file.Name, totalFileCount, transcribedFileCount));
 
-                await Task.Delay(3000);
+                //await Task.Delay(3000);
 
-                //using var audioConfig = AudioConfig.FromWavFileInput(file.FullName);
-                //using var speechRecognizer = new SpeechRecognizer(_speechConfig, audioConfig);
-                //var speechRecognitionResult = await speechRecognizer.RecognizeOnceAsync();
+                using var audioConfig = AudioConfig.FromWavFileInput(file.FullName);
+                using var speechRecognizer = new SpeechRecognizer(_speechConfig, audioConfig);
+                var speechRecognitionResult = await speechRecognizer.RecognizeOnceAsync();
 
-                //var outputPath = outputDirectory ?? file.DirectoryName
-                //    ?? throw new ArgumentException($"Output directory is invalid for file: {file.FullName}");
+                var outputPath = outputDirectory ?? file.DirectoryName
+                    ?? throw new ArgumentException($"Output directory is invalid for file: {file.FullName}");
 
-                //var filePath = Path.Combine(outputPath, $"{Path.GetFileNameWithoutExtension(file.Name)}.txt");
+                var filePath = Path.Combine(outputPath, $"{Path.GetFileNameWithoutExtension(file.Name)}.txt");
 
-                //await using var outputFile = new StreamWriter(filePath, false);
-                //await outputFile.WriteLineAsync(FileToText(speechRecognitionResult));
+                await using var outputFile = new StreamWriter(filePath, false);
+                await outputFile.WriteLineAsync(FileToText(speechRecognitionResult));
             }
 
             progress?.Report(new TranscriptionResult("Completed", totalFileCount, transcribedFileCount, true));
@@ -104,13 +104,15 @@ namespace Audionomy.BL.Services
                 {
                     continue;
                 }
-                await Task.Delay(3000);
-                //using var audioConfig = AudioConfig.FromWavFileInput(file.FullName);
-                //using var speechRecognizer = new SpeechRecognizer(_speechConfig, audioConfig);
-                //var speechRecognitionResult = await speechRecognizer.RecognizeOnceAsync();
 
-                //await using var outputFile = new StreamWriter(filePath, append: true);
-                //await outputFile.WriteLineAsync($"{file.Name}|{FileToText(speechRecognitionResult)}");
+                //await Task.Delay(3000);
+
+                using var audioConfig = AudioConfig.FromWavFileInput(file.FullName);
+                using var speechRecognizer = new SpeechRecognizer(_speechConfig, audioConfig);
+                var speechRecognitionResult = await speechRecognizer.RecognizeOnceAsync();
+
+                await using var outputFile = new StreamWriter(filePath, append: true);
+                await outputFile.WriteLineAsync($"{file.Name}|{FileToText(speechRecognitionResult)}");
             }
 
             var finalResult = new TranscriptionResult("Completed", totalFileCount, transcribedFileCount);
