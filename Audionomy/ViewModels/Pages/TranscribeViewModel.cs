@@ -1,27 +1,25 @@
-﻿using Audionomy.BL;
-using Audionomy.BL.DataModels;
-using Audionomy.BL.Services;
-using Audionomy.Services;
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using Microsoft.Win32;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using Wpf.Ui.Controls;
-
-namespace Audionomy.ViewModels.Pages
+﻿namespace Audionomy.ViewModels.Pages
 {
+    using Audionomy.BL.DataModels;
+    using Audionomy.BL.Services;
+    using Audionomy.Services;
+    using CommunityToolkit.Mvvm.ComponentModel;
+    using CommunityToolkit.Mvvm.Input;
+    using Microsoft.Win32;
+    using System.Collections.ObjectModel;
+    using System.IO;
+    using System.Windows;
+    using Wpf.Ui;
+    using Wpf.Ui.Controls;
+
     public partial class TranscribeViewModel : ObservableObject, INavigationAware
     {
         private readonly IAudioFileCountingService _audioFileCountingService;
         private readonly IAppSettings _appSettings;
+        private readonly IServiceProvider _serviceProvider;
+        private readonly INavigationWindow _navigationWindow;
+        private SettingsModel _settings;
+        CancellationTokenSource _cts;
 
         [ObservableProperty]
         private Visibility _openedFolderPathVisibility = Visibility.Hidden;
@@ -39,57 +37,43 @@ namespace Audionomy.ViewModels.Pages
         private string _numberOfAudioFiles = string.Empty;
 
         [ObservableProperty]
-        private Visibility _progressVisible = Visibility.Hidden;
+        private ProgressViewModel _progress = new ProgressViewModel();
 
         [ObservableProperty]
-        private int _progressBarMaxValue = 0;
+        private ErrorViewModel _error = new ErrorViewModel();
 
         [ObservableProperty]
-        private int _progressBarValue = 0;
+        private ObservableCollection<string> _comboBoxLanguages;
 
         [ObservableProperty]
-        private string _progessFileName = string.Empty;
+        private Visibility _showTranscribe = Visibility.Visible;
 
         [ObservableProperty]
-        private string _progessSum = string.Empty;
+        private Visibility _showCancelTranscribe = Visibility.Hidden;
 
-        [ObservableProperty]
-        private bool _errorMessageIsOpen = false;
-
-        [ObservableProperty]
-        private string _errorMessage = string.Empty;
-
-        [ObservableProperty]
-        private InfoBarSeverity _errorSeverity = InfoBarSeverity.Informational;
-
-        [ObservableProperty]
-        private ObservableCollection<string> _comboBoxLanguages =
-            [
-                 "ar-SA","cs-CZ","de-DE","el-GR","en-GB","es-ES","fr-FR","hu-HU","it-IT","nl-NL","pl-PL","pt-PT","ru-RU","sk-SK"
-            ];
-
-        public TranscribeViewModel(IAudioFileCountingService audioFileCountingService, IAppSettings appSettings)
+        public TranscribeViewModel(IAudioFileCountingService audioFileCountingService,
+            IAppSettings appSettings,
+            IServiceProvider serviceProvider)
         {
             _audioFileCountingService = audioFileCountingService;
             _appSettings = appSettings;
+            _serviceProvider = serviceProvider;
+            _navigationWindow = (_serviceProvider.GetService(typeof(INavigationWindow)) as INavigationWindow)!;
         }
 
-        public void OnNavigatedFrom()
-        {
-            //throw new NotImplementedException();
-        }
+        public async void OnNavigatedFrom() { }
 
-        public void OnNavigatedTo()
+        public async void OnNavigatedTo()
         {
-            // throw new NotImplementedException();
+            _settings = await _appSettings.LoadSettingsAsync().ConfigureAwait(false);
+            ComboBoxLanguages = new ObservableCollection<string>(_settings.AzureSpeechServiceLanguageSelection);
         }
 
         [RelayCommand]
         public void OnOpenFolder()
         {
-            ProgressVisible = Visibility.Collapsed;
-            ErrorMessageIsOpen = false;
-            ErrorMessage = string.Empty;
+            Error = new ErrorViewModel();
+            Progress = new ProgressViewModel();
 
             OpenFolderDialog openFolderDialog = new()
             {
@@ -118,12 +102,17 @@ namespace Audionomy.ViewModels.Pages
         {
             try
             {
-                var settings = await _appSettings.LoadSettingsAsync();
+                Error = new ErrorViewModel();
+
+                if (string.IsNullOrEmpty(_settings.AzureSpeechServiceKey) || string.IsNullOrEmpty(_settings.AzureSpeechServiceLocation))
+                {
+                    _navigationWindow.Navigate(typeof(Views.Pages.SettingsPage));
+                    return;
+                }
+
                 if (string.IsNullOrEmpty(OpenedFolderPath))
                 {
-                    ErrorMessageIsOpen = true;
-                    ErrorMessage = "Folder is not selected";
-                    ErrorSeverity = InfoBarSeverity.Warning;
+                    Error = new ErrorViewModel("Folder is not selected.", InfoBarSeverity.Warning);
                     return;
                 }
 
@@ -132,40 +121,58 @@ namespace Audionomy.ViewModels.Pages
 
                 if (_audioFileCountingService.ValidWavFiles(OpenedFolderPath) == 0)
                 {
-                    ErrorMessageIsOpen = true;
-                    ErrorMessage = "There are not wav files in the selected folder";
-                    ErrorSeverity = InfoBarSeverity.Warning;
+                    Error = new ErrorViewModel("There are not wav files in the selected folder.", InfoBarSeverity.Warning);
                     return;
                 }
 
-
-                var transcribeFilesService = new TranscribeFilesService(settings.AzureSpeechServiceKey, settings.AzureSpeechServiceLocation);
-                ProgressVisible = Visibility.Visible;
+                ShowTranscribe = Visibility.Hidden;
+                ShowCancelTranscribe = Visibility.Visible;
                 var progress = new Progress<TranscriptionResult>(result =>
                 {
-                    ProgressBarMaxValue = result.TotalFileCount;
-                    ProgressBarValue = result.TranscribedFileCount;
-                    ProgessFileName = $"Transcribing... {result.FilePath}";
-                    ProgessSum = result.Completed ? "" : $"{result.TranscribedFileCount}/{result.TotalFileCount}";
-                    Debug.WriteLine($"{result.FilePath}: {result.TotalFileCount}: {result.TranscribedFileCount}"); // Console output for debugging
+                    if (result.Completed)
+                    {
+                        Progress = new ProgressViewModel(result.TotalFileCount, result.TranscribedFileCount, $"{result.FilePath}", string.Empty);
+                    }
+                    else
+                    {
+                        Progress = new ProgressViewModel(result.TotalFileCount, result.TranscribedFileCount, $"Transcribing... {result.FilePath}", $"{result.TranscribedFileCount}/{result.TotalFileCount}");
+                    }
                 });
+
+                var transcribeFilesService = new TranscribeFilesService(_settings.AzureSpeechServiceKey, _settings.AzureSpeechServiceLocation);
+
+                _cts = new CancellationTokenSource();
 
                 if (GenerateSingleFile)
                 {
-                    await transcribeFilesService.TranscribeAndSaveSingleFileAsync(files, _selectedLanguage, null, null, progress);
+                    await transcribeFilesService.TranscribeAndSaveAsync(files, new SpeechTranscriptionExtentOptions { LanguageCode = SelectedLanguage }, progress, _cts.Token);
                 }
                 else
                 {
-                    await transcribeFilesService.TranscribeAndSaveBatchAsync(files, _selectedLanguage, null, progress);
+                    await transcribeFilesService.TranscribeAndSaveAsync(files, new SpeechTranscriptionBaseOptions { LanguageCode = SelectedLanguage }, progress, _cts.Token);
                 }
+            }
+            catch (OperationCanceledException ex)
+            {
+                Error = new ErrorViewModel(ex.Message, InfoBarSeverity.Warning);
             }
             catch (Exception ex)
             {
-                ErrorMessageIsOpen = true;
-                ErrorMessage = ex.Message;
-                ErrorSeverity = InfoBarSeverity.Error;
-                ProgressVisible = Visibility.Collapsed;
+                Error = new ErrorViewModel(ex.Message, InfoBarSeverity.Error);
             }
+            finally
+            {
+                Progress = new ProgressViewModel();
+                ShowTranscribe = Visibility.Visible;
+                ShowCancelTranscribe = Visibility.Hidden;
+            }
+        }
+
+        [RelayCommand]
+        private async Task OnCancelTranscribe()
+        {
+            Progress = new ProgressViewModel(0, 0, "Cancelling operation...please wait", string.Empty);
+            _cts?.Cancel();
         }
     }
 }

@@ -73,14 +73,15 @@
             </Border>
             <CheckBox Grid.Column="1" Margin="16,0,0,0"  Grid.Row="2"  IsChecked="{Binding ViewModel.GenerateSingleFile, Mode=TwoWay}"/>
         </Grid>
-        <ui:Button Grid.Row="3" Margin="0,15,0,0"   Command="{Binding ViewModel.TranscribeCommand, Mode=OneWay}" Content="Start transcription" Icon="Fluent24" />
+        <ui:Button Grid.Row="3" Width="200" Margin="0,15,0,0" Command="{Binding ViewModel.TranscribeCommand, Mode=OneWay}"  Visibility="{Binding ViewModel.ShowTranscribe, Mode=OneWay}" Content="Start transcription" Icon="Fluent24" />
+        <ui:Button Grid.Row="3" Width="200" Margin="0,15,0,0" Command="{Binding ViewModel.CancelTranscribeCommand, Mode=OneWay}" Visibility="{Binding ViewModel.ShowCancelTranscribe, Mode=OneWay}" Content="Cancel transcription" Icon="Fluent24" />
 
-        <ui:InfoBar Grid.Row="4" VerticalAlignment="Bottom" Message="{Binding ViewModel.ErrorMessage}" Severity="{Binding ViewModel.ErrorSeverity}" IsOpen="{Binding ViewModel.ErrorMessageIsOpen, Mode=TwoWay}"/>
-        <StackPanel VerticalAlignment="Bottom" Grid.Row="4" Margin="0,0,0,0" Visibility="{Binding ViewModel.ProgressVisible}" >
-            <ProgressBar Value="{Binding ViewModel.ProgressBarValue, Mode=OneWay}" Maximum="{Binding ViewModel.ProgressBarMaxValue, Mode=OneWay}" />
+        <ui:InfoBar Grid.Row="4" VerticalAlignment="Bottom" Message="{Binding ViewModel.Error.Message}" Severity="{Binding ViewModel.Error.Severity}" IsOpen="{Binding ViewModel.Error.IsOpen, Mode=TwoWay}"/>
+        <StackPanel VerticalAlignment="Bottom" Grid.Row="4" Margin="0,0,0,0" Visibility="{Binding ViewModel.Progress.Visibility}" >
+            <ProgressBar Value="{Binding ViewModel.Progress.Value, Mode=OneWay}" Maximum="{Binding ViewModel.Progress.MaxValue, Mode=OneWay}" />
             <DockPanel LastChildFill="True" >
-                <ui:TextBlock VerticalAlignment="Center" Text="{Binding ViewModel.ProgessFileName}" Padding="0,5,11,6"/>
-                <ui:TextBlock VerticalAlignment="Center" HorizontalAlignment="Right" Text="{Binding ViewModel.ProgessSum}" Padding="0,5,11,6"/>
+                <ui:TextBlock VerticalAlignment="Center" Text="{Binding ViewModel.Progress.CurrentAction}" Padding="0,5,11,6"/>
+                <ui:TextBlock VerticalAlignment="Center" HorizontalAlignment="Right" Text="{Binding ViewModel.Progress.Summary}" Padding="0,5,11,6"/>
 
             </DockPanel>
         </StackPanel>

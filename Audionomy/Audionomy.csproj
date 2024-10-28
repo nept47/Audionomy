@@ -4,14 +4,14 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <ApplicationIcon>wpfui-icon.ico</ApplicationIcon>
+    <ApplicationIcon>Audionomy.ico</ApplicationIcon>
     <UseWPF>true</UseWPF>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="wpfui-icon.ico" />
+    <Content Include="Audionomy.ico" />
   </ItemGroup>
 
   <ItemGroup>
