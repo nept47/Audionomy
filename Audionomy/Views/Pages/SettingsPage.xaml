@@ -21,8 +21,9 @@
         </Grid.RowDefinitions>
 
         <ui:TextBlock Grid.Row="0" Margin="0,0,0,10" FontTypography="BodyStrong" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="Azure Speech service" />
+       
         <Border Grid.Row="1" Padding="16" Background="{ui:ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ui:ThemeResource CardStrokeColorDefaultBrush}"
-                BorderThickness="1,1,1,0" HorizontalAlignment="Left" CornerRadius="8,8,0,0" MaxWidth="800">
+                BorderThickness="1,1,1,0" CornerRadius="8,8,0,0" HorizontalAlignment="Stretch">
             <StackPanel>
                 <StackPanel Margin="0,0,0,0">
                     <Label Content="Key" Padding="0,0,0,5" Target="{Binding ElementName=TxtAzureSpeechServiceKey, UpdateSourceTrigger=PropertyChanged}" />
@@ -50,23 +51,25 @@
                         </StackPanel.Style>
                         <TextBlock Text="This is a toggleable panel." VerticalAlignment="Center" HorizontalAlignment="Center"/>
                     </StackPanel>
-                    --><!--<ui:ListView
+                    -->
+                <!--<ui:ListView
                         MaxHeight="200"
                         d:ItemsSource="{d:SampleData ItemCount=2}"
                         ItemsSource="{Binding ViewModel.AzureAvailableLanguages, Mode=TwoWay}"
                         SelectedIndex="2"
                         SelectionMode="Multiple">
                         -->
-                    <!--<ui:ListView.ItemTemplate>
+                <!--<ui:ListView.ItemTemplate>
                             <DataTemplate DataType="{x:Type models:Person}">
                                 <TextBlock Margin="8,4" Text="{Binding Name, Mode=OneWay}" />
                             </DataTemplate>
                         </ui:ListView.ItemTemplate>-->
-                    <!--
-                    </ui:ListView>--><!--
+                <!--
+                    </ui:ListView>-->
+                <!--
 
                 </StackPanel>-->
-               
+
             </StackPanel>
         </Border>
 
