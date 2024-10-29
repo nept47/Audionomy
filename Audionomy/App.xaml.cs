@@ -1,4 +1,5 @@
-﻿using Audionomy.BL.Services;
+﻿using Audionomy.BL.DataModels;
+using Audionomy.BL.Services;
 using Audionomy.Services;
 using Audionomy.ViewModels.Pages;
 using Audionomy.ViewModels.Widnows;
@@ -57,7 +58,8 @@ namespace Audionomy
                 services.AddSingleton<SynthesizePage>();
                 services.AddSingleton<SynthesizeViewModel>();
 
-                services.AddSingleton<IAppSettings, AppSettings>();
+                services.AddSingleton<ISettingsService<SecureSettingsModel>, SecureSettingsService>();
+                services.AddSingleton<ISettingsService<UserSettingsModel>, UserSettingsService>();
 
                 services.AddSingleton<IAudioFileCountingService, AudioFileCountingService>();
 

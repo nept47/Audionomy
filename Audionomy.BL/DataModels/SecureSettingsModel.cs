@@ -1,6 +1,6 @@
 ﻿namespace Audionomy.BL.DataModels
 {
-    public class SettingsModel
+    public class SecureSettingsModel
     {
         public string AzureSpeechServiceKey { get; set; } = string.Empty;
 
