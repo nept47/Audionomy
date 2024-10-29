@@ -15,10 +15,13 @@
     public partial class TranscribeViewModel : ObservableObject, INavigationAware
     {
         private readonly IAudioFileCountingService _audioFileCountingService;
-        private readonly IAppSettings _appSettings;
+        private readonly ISettingsService<SecureSettingsModel> _appSettingsService;
+        private readonly ISettingsService<UserSettingsModel> _userSettingService;
         private readonly IServiceProvider _serviceProvider;
         private readonly INavigationWindow _navigationWindow;
-        private SettingsModel _settings;
+        private SecureSettingsModel _appSettings;
+        private UserSettingsModel _userSettings;
+        private bool _isInitialized;
         CancellationTokenSource _cts;
 
         [ObservableProperty]
@@ -52,11 +55,13 @@
         private Visibility _showCancelTranscribe = Visibility.Hidden;
 
         public TranscribeViewModel(IAudioFileCountingService audioFileCountingService,
-            IAppSettings appSettings,
+            ISettingsService<SecureSettingsModel> appSettingsService,
+            ISettingsService<UserSettingsModel> userSettingsService,
             IServiceProvider serviceProvider)
         {
             _audioFileCountingService = audioFileCountingService;
-            _appSettings = appSettings;
+            _appSettingsService = appSettingsService;
+            _userSettingService = userSettingsService;
             _serviceProvider = serviceProvider;
             _navigationWindow = (_serviceProvider.GetService(typeof(INavigationWindow)) as INavigationWindow)!;
         }
@@ -65,8 +70,18 @@
 
         public async void OnNavigatedTo()
         {
-            _settings = await _appSettings.LoadSettingsAsync().ConfigureAwait(false);
-            ComboBoxLanguages = new ObservableCollection<string>(_settings.AzureSpeechServiceLanguageSelection);
+            _appSettings = await _appSettingsService.LoadSettingsAsync();
+            
+            if (!_isInitialized)
+            {
+                ComboBoxLanguages = new ObservableCollection<string>(_appSettings.AzureSpeechServiceLanguageSelection);
+
+                _userSettings = await _userSettingService.LoadSettingsAsync();
+                SelectedLanguage = _userSettings.LastSelectedLanguage;
+                GenerateSingleFile = _userSettings.LastSelectedFileModeIsSingle;
+
+                _isInitialized = true;
+            }
         }
 
         [RelayCommand]
@@ -78,7 +93,7 @@
             OpenFolderDialog openFolderDialog = new()
             {
                 Multiselect = false,
-                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
+                InitialDirectory = OpenedFolderPath ?? (_userSettings.LastSelectedFolder ?? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments))
             };
 
             if (openFolderDialog.ShowDialog() != true)
@@ -104,7 +119,14 @@
             {
                 Error = new ErrorViewModel();
 
-                if (string.IsNullOrEmpty(_settings.AzureSpeechServiceKey) || string.IsNullOrEmpty(_settings.AzureSpeechServiceLocation))
+                await _userSettingService.SaveSettingsAsync(new UserSettingsModel()
+                {
+                    LastSelectedFileModeIsSingle = GenerateSingleFile,
+                    LastSelectedFolder = OpenedFolderPath,
+                    LastSelectedLanguage = SelectedLanguage,
+                });
+
+                if (string.IsNullOrEmpty(_appSettings.AzureSpeechServiceKey) || string.IsNullOrEmpty(_appSettings.AzureSpeechServiceLocation))
                 {
                     _navigationWindow.Navigate(typeof(Views.Pages.SettingsPage));
                     return;
@@ -139,7 +161,7 @@
                     }
                 });
 
-                var transcribeFilesService = new TranscribeFilesService(_settings.AzureSpeechServiceKey, _settings.AzureSpeechServiceLocation);
+                var transcribeFilesService = new TranscribeFilesService(_appSettings.AzureSpeechServiceKey, _appSettings.AzureSpeechServiceLocation);
 
                 _cts = new CancellationTokenSource();
 
@@ -169,7 +191,7 @@
         }
 
         [RelayCommand]
-        private async Task OnCancelTranscribe()
+        private void OnCancelTranscribe()
         {
             Progress = new ProgressViewModel(0, 0, "Cancelling operation...please wait", string.Empty);
             _cts?.Cancel();

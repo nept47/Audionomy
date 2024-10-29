@@ -1,4 +1,5 @@
-﻿using Audionomy.BL.Services;
+﻿using Audionomy.BL.DataModels;
+using Audionomy.BL.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
@@ -35,11 +36,11 @@ namespace Audionomy.ViewModels.Pages
         [ObservableProperty]
         private bool _isLanguageSelectionPanelVisible = false;
 
-        public IAppSettings _appSettings { get; }
+        public ISettingsService<SecureSettingsModel> _appSettingsService { get; }
 
-        public SettingsViewModel(IAppSettings appSettings)
+        public SettingsViewModel(ISettingsService<SecureSettingsModel> appSettingsService)
         {
-            _appSettings = appSettings;
+            _appSettingsService = appSettingsService;
         }
 
         public void OnNavigatedFrom() { }
@@ -52,7 +53,7 @@ namespace Audionomy.ViewModels.Pages
 
         private async Task InitializeViewModel()
         {
-            var settings = await _appSettings.LoadSettingsAsync();
+            var settings = await _appSettingsService.LoadSettingsAsync();
             //CurrentTheme = ApplicationThemeManager.GetAppTheme();
             AppVersion = $"UiDesktopApp1 - {GetAssemblyVersion()}";
             AzureSpeechServiceKey = settings.AzureSpeechServiceKey;
@@ -71,7 +72,7 @@ namespace Audionomy.ViewModels.Pages
         [RelayCommand]
         private void OnSettingsSave()
         {
-            _appSettings.SaveSettingsAsync(new BL.DataModels.SettingsModel()
+            _appSettingsService.SaveSettingsAsync(new BL.DataModels.SecureSettingsModel()
             {
                 AzureSpeechServiceKey = _azureSpeechServiceKey,
                 AzureSpeechServiceLocation = _azureLocation,

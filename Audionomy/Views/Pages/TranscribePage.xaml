@@ -50,9 +50,9 @@
                               Padding="11,5,11,6"/>
             </Border>
             <ComboBox  HorizontalAlignment="Left" Grid.Column="1" Margin="16,0,0,0"
-                      SelectedValue="{Binding ViewModel.SelectedLanguage, Mode=TwoWay}"
-                ItemsSource="{Binding ViewModel.ComboBoxLanguages, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:TranscribePage}, Mode=OneWay}"
-                SelectedIndex="0">
+                       SelectedValue="{Binding ViewModel.SelectedLanguage, Mode=TwoWay}"
+                       ItemsSource="{Binding ViewModel.ComboBoxLanguages, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:TranscribePage}, Mode=OneWay}"
+                       >
                 <ComboBox.ItemTemplate>
                     <DataTemplate>
                         <TextBlock Text="{Binding}" />
