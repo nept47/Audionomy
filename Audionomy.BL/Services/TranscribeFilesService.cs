@@ -1,16 +1,17 @@
 ﻿namespace Audionomy.BL.Services
 {
     using Audionomy.BL.DataModels;
+    using Audionomy.BL.Interfaces;
     using Microsoft.CognitiveServices.Speech;
     using Microsoft.CognitiveServices.Speech.Audio;
 
-    public class TranscribeFilesService
+    public class TranscribeFilesService : ITranscribeFilesService
     {
-        readonly private SpeechConfig _speechConfig;
+        private readonly ISettingsService<SecureSettingsModel> _settingsService;
 
-        public TranscribeFilesService(string key, string region)
+        public TranscribeFilesService(ISettingsService<SecureSettingsModel> settingsService)
         {
-            _speechConfig = SpeechConfig.FromSubscription(key, region);
+            _settingsService = settingsService;
         }
 
         public async Task TranscribeAndSaveAsync(List<FileInfo> wavFiles, SpeechTranscriptionBaseOptions speechTranscriptionOptions, IProgress<TranscriptionResult>? progress = null, CancellationToken cancellationToken = default)
@@ -27,7 +28,10 @@
                 throw new ArgumentException("Input file list cannot be null or empty.", nameof(wavFiles));
             }
 
-            _speechConfig.SpeechRecognitionLanguage = speechTranscriptionOptions.LanguageCode;
+            var settings = _settingsService.LoadSettings();
+            var speechConfig = SpeechConfig.FromSubscription(settings.AzureSpeechServiceKey, settings.AzureSpeechServiceLocation);
+            speechConfig.SpeechRecognitionLanguage = speechTranscriptionOptions.LanguageCode;
+
             var totalFileCount = wavFiles.Count;
             var transcribedFileCount = 0;
 
@@ -45,7 +49,7 @@
                 //await Task.Delay(3000);
 
                 using var audioConfig = AudioConfig.FromWavFileInput(file.FullName);
-                using var speechRecognizer = new SpeechRecognizer(_speechConfig, audioConfig);
+                using var speechRecognizer = new SpeechRecognizer(speechConfig, audioConfig);
                 var speechRecognitionResult = await speechRecognizer.RecognizeOnceAsync();
 
                 cancellationToken.ThrowIfCancellationRequested();
@@ -54,7 +58,7 @@
 
                 var outputPath = speechTranscriptionOptions.OutputFolderPath ?? file.DirectoryName ?? throw new ArgumentException($"Output directory is invalid for file: {file.FullName}");
                 var filePath = Path.Combine(outputPath, $"{Path.GetFileNameWithoutExtension(file.Name)}.txt");
-              
+
                 await using var outputFile = new StreamWriter(filePath, false);
                 await outputFile.WriteLineAsync(text);
             }
@@ -91,7 +95,9 @@
 
             var filePath = Path.Combine(path, speechTranscriptionOptions.OutputFilename);
 
-            _speechConfig.SpeechRecognitionLanguage = speechTranscriptionOptions.LanguageCode;
+            var settings = _settingsService.LoadSettings();
+            var speechConfig = SpeechConfig.FromSubscription(settings.AzureSpeechServiceKey, settings.AzureSpeechServiceLocation);
+            speechConfig.SpeechRecognitionLanguage = speechTranscriptionOptions.LanguageCode;
             var totalFileCount = wavFiles.Count;
             var transcribedFileCount = 0;
 
@@ -109,7 +115,7 @@
                 //await Task.Delay(3000);
 
                 using var audioConfig = AudioConfig.FromWavFileInput(file.FullName);
-                using var speechRecognizer = new SpeechRecognizer(_speechConfig, audioConfig);
+                using var speechRecognizer = new SpeechRecognizer(speechConfig, audioConfig);
                 var speechRecognitionResult = await speechRecognizer.RecognizeOnceAsync();
 
                 cancellationToken.ThrowIfCancellationRequested();

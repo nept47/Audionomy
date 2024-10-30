@@ -1,5 +1,5 @@
 ﻿using Audionomy.BL.DataModels;
-using Audionomy.BL.Services;
+using Audionomy.BL.Interfaces;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;

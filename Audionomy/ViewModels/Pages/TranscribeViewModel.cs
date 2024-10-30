@@ -1,6 +1,7 @@
 ﻿namespace Audionomy.ViewModels.Pages
 {
     using Audionomy.BL.DataModels;
+    using Audionomy.BL.Interfaces;
     using Audionomy.BL.Services;
     using Audionomy.Services;
     using CommunityToolkit.Mvvm.ComponentModel;
@@ -17,6 +18,7 @@
         private readonly IAudioFileCountingService _audioFileCountingService;
         private readonly ISettingsService<SecureSettingsModel> _appSettingsService;
         private readonly ISettingsService<UserSettingsModel> _userSettingService;
+        private readonly ITranscribeFilesService _transcribeFilesService;
         private readonly IServiceProvider _serviceProvider;
         private readonly INavigationWindow _navigationWindow;
         private SecureSettingsModel _appSettings;
@@ -57,11 +59,13 @@
         public TranscribeViewModel(IAudioFileCountingService audioFileCountingService,
             ISettingsService<SecureSettingsModel> appSettingsService,
             ISettingsService<UserSettingsModel> userSettingsService,
+            ITranscribeFilesService transcribeFilesService,
             IServiceProvider serviceProvider)
         {
             _audioFileCountingService = audioFileCountingService;
             _appSettingsService = appSettingsService;
             _userSettingService = userSettingsService;
+            _transcribeFilesService = transcribeFilesService;
             _serviceProvider = serviceProvider;
             _navigationWindow = (_serviceProvider.GetService(typeof(INavigationWindow)) as INavigationWindow)!;
         }
@@ -161,17 +165,16 @@
                     }
                 });
 
-                var transcribeFilesService = new TranscribeFilesService(_appSettings.AzureSpeechServiceKey, _appSettings.AzureSpeechServiceLocation);
 
                 _cts = new CancellationTokenSource();
 
                 if (GenerateSingleFile)
                 {
-                    await transcribeFilesService.TranscribeAndSaveAsync(files, new SpeechTranscriptionExtentOptions { LanguageCode = SelectedLanguage }, progress, _cts.Token);
+                    await _transcribeFilesService.TranscribeAndSaveAsync(files, new SpeechTranscriptionExtentOptions { LanguageCode = SelectedLanguage }, progress, _cts.Token);
                 }
                 else
                 {
-                    await transcribeFilesService.TranscribeAndSaveAsync(files, new SpeechTranscriptionBaseOptions { LanguageCode = SelectedLanguage }, progress, _cts.Token);
+                    await _transcribeFilesService.TranscribeAndSaveAsync(files, new SpeechTranscriptionBaseOptions { LanguageCode = SelectedLanguage }, progress, _cts.Token);
                 }
             }
             catch (OperationCanceledException ex)

@@ -1,5 +1,6 @@
 ﻿using Audionomy.BL.DataModels;
 using Audionomy.BL.Helpers;
+using Audionomy.BL.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,6 +32,25 @@ namespace Audionomy.BL.Services
 
                 using var reader = new StreamReader(_settingsFilePath);
                 var fileContent = await reader.ReadToEndAsync();
+                return JsonSerializer.Deserialize<UserSettingsModel>(fileContent) ?? new UserSettingsModel();
+            }
+            catch (Exception ex)
+            {
+                return new UserSettingsModel();
+            }
+        }
+
+        public UserSettingsModel LoadSettings()
+        {
+            try
+            {
+                if (!File.Exists(_settingsFilePath))
+                {
+                    return new UserSettingsModel();
+                }
+
+                using var reader = new StreamReader(_settingsFilePath);
+                var fileContent = reader.ReadToEnd();
                 return JsonSerializer.Deserialize<UserSettingsModel>(fileContent) ?? new UserSettingsModel();
             }
             catch (Exception ex)

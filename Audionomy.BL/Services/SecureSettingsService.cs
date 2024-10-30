@@ -2,6 +2,7 @@
 {
     using Audionomy.BL.DataModels;
     using Audionomy.BL.Helpers;
+    using Audionomy.BL.Interfaces;
     using System.Text.Json;
 
     public class SecureSettingsService : ISettingsService<SecureSettingsModel>
@@ -28,6 +29,25 @@
 
                 using var reader = new StreamReader(_settingsFilePath);
                 var fileContent = await reader.ReadToEndAsync();
+                return JsonSerializer.Deserialize<SecureSettingsModel>(_aesEncryption.Decrypt(fileContent)) ?? new SecureSettingsModel();
+            }
+            catch (Exception ex)
+            {
+                return new SecureSettingsModel();
+            }
+        }
+
+        public SecureSettingsModel LoadSettings()
+        {
+            try
+            {
+                if (!File.Exists(_settingsFilePath))
+                {
+                    return new SecureSettingsModel();
+                }
+
+                using var reader = new StreamReader(_settingsFilePath);
+                var fileContent = reader.ReadToEnd();
                 return JsonSerializer.Deserialize<SecureSettingsModel>(_aesEncryption.Decrypt(fileContent)) ?? new SecureSettingsModel();
             }
             catch (Exception ex)

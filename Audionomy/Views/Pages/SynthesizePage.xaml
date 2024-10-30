@@ -13,15 +13,55 @@
       ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
       Foreground="{DynamicResource TextFillColorPrimaryBrush}">
 
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
-        <ui:InfoBar Grid.Row="0" VerticalAlignment="Bottom" Message="Under contractions" Severity="Informational" IsOpen="true"/>
+   
+
+        <Grid Margin="11,0,0,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions >
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+            <ui:TextBlock Grid.Row="0" Appearance="Secondary" FontTypography="Caption" Text="Text" Margin="1,0,0,4" />
+            <ui:TextBox  Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" Height="75" AcceptsReturn="True"
+              PlaceholderText="Type something..." TextWrapping="Wrap"/>
+        <ui:Button Grid.Row="1" Grid.Column="2" Content="" ToolTipService.ToolTip="Select file" Command="{Binding ViewModel.OpenFileCommand}" VerticalAlignment="Stretch" Icon="{ui:SymbolIcon Symbol=FolderOpen20, Filled=True}" Margin="5,0,0,0"/>
+        <ui:TextBlock Grid.Row="2" Grid.Column="0" Margin="0,15,0,0" FontSize="{DynamicResourceExtension ControlContentThemeFontSize}" VerticalAlignment="Center" Text="Language" />
+            <ComboBox  HorizontalAlignment="Left" Grid.Row="2" Grid.Column="1" Margin="15,15,0,0"
+                      SelectedValue="{Binding ViewModel.SelectedLanguage, Mode=TwoWay}"
+                      ItemsSource="{Binding ViewModel.ComboBoxLanguages, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:TranscribePage}, Mode=OneWay}"
+                      >
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding}" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+        <ui:TextBlock Grid.Row="3" Grid.Column="0" Margin="0,15,0,0" FontSize="{DynamicResourceExtension ControlContentThemeFontSize}" VerticalAlignment="Center" Text="Generate txt file" />
+            <CheckBox Grid.Row="3" Grid.Column="1" Margin="15,15,0,0" IsChecked="{Binding ViewModel.GenerateTxtFile, Mode=TwoWay}"/>
+
+        
+
+      
+        <ui:Button Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Width="200" Margin="0,15,0,0" Command="{Binding ViewModel.TranscribeCommand, Mode=OneWay}"  Visibility="{Binding ViewModel.ShowTranscribe, Mode=OneWay}" Content="Start"  />
+        <!--<ui:Button Grid.Row="4" Width="200" Margin="0,15,0,0" Command="{Binding ViewModel.CancelTranscribeCommand, Mode=OneWay}" Visibility="{Binding ViewModel.ShowCancelTranscribe, Mode=OneWay}" Content="Cancel transcription" Icon="Fluent24" />-->
+
+        <ui:InfoBar Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" VerticalAlignment="Bottom" Message="{Binding ViewModel.Error.Message}" Severity="{Binding ViewModel.Error.Severity}" IsOpen="{Binding ViewModel.Error.IsOpen, Mode=TwoWay}"/>
+        <StackPanel VerticalAlignment="Bottom" Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,0" Visibility="{Binding ViewModel.Progress.Visibility}" >
+            <ProgressBar Value="{Binding ViewModel.Progress.Value, Mode=OneWay}" Maximum="{Binding ViewModel.Progress.MaxValue, Mode=OneWay}" />
+            <DockPanel LastChildFill="True" >
+                <ui:TextBlock VerticalAlignment="Center" Text="{Binding ViewModel.Progress.CurrentAction}" Padding="0,5,11,6"/>
+                <ui:TextBlock VerticalAlignment="Center" HorizontalAlignment="Right" Text="{Binding ViewModel.Progress.Summary}" Padding="0,5,11,6"/>
+
+            </DockPanel>
+        </StackPanel>
 
     </Grid>
 </Page>
