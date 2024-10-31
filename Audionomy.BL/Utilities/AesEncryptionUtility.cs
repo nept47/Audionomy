@@ -1,14 +1,14 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 
-namespace Audionomy.BL.Helpers
+namespace Audionomy.BL.Utilities
 {
-    public class AesEncryption
+    public class AesEncryptionUtility
     {
         private readonly byte[] key;
         private readonly byte[] iv;
 
-        public AesEncryption(string password)
+        public AesEncryptionUtility(string password)
         {
             // Derive a key and IV from the password
             using (var sha256 = SHA256.Create())

@@ -1,21 +1,21 @@
 ﻿namespace Audionomy.BL.Services
 {
     using Audionomy.BL.DataModels;
-    using Audionomy.BL.Helpers;
     using Audionomy.BL.Interfaces;
+    using Audionomy.BL.Utilities;
     using System.Text.Json;
 
     public class SecureSettingsService : ISettingsService<SecureSettingsModel>
     {
-        private string _settingsFilePath;
-        private AesEncryption _aesEncryption;
+        private readonly string _settingsFilePath;
+        private readonly AesEncryptionUtility _aesEncryption;
         private readonly string _settingsFileName = "app.config";
 
         public SecureSettingsService()
         {
             string roamingPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             _settingsFilePath = Path.Combine(roamingPath, System.AppDomain.CurrentDomain.FriendlyName, _settingsFileName);
-            _aesEncryption = new AesEncryption(Environment.UserName);
+            _aesEncryption = new AesEncryptionUtility(Environment.UserName);
         }
 
         public async Task<SecureSettingsModel> LoadSettingsAsync()
@@ -31,27 +31,9 @@
                 var fileContent = await reader.ReadToEndAsync();
                 return JsonSerializer.Deserialize<SecureSettingsModel>(_aesEncryption.Decrypt(fileContent)) ?? new SecureSettingsModel();
             }
-            catch (Exception ex)
+            catch
             {
-                return new SecureSettingsModel();
-            }
-        }
-
-        public SecureSettingsModel LoadSettings()
-        {
-            try
-            {
-                if (!File.Exists(_settingsFilePath))
-                {
-                    return new SecureSettingsModel();
-                }
-
-                using var reader = new StreamReader(_settingsFilePath);
-                var fileContent = reader.ReadToEnd();
-                return JsonSerializer.Deserialize<SecureSettingsModel>(_aesEncryption.Decrypt(fileContent)) ?? new SecureSettingsModel();
-            }
-            catch (Exception ex)
-            {
+                // TODO: Handle exception
                 return new SecureSettingsModel();
             }
         }
@@ -59,6 +41,11 @@
         public async Task<bool> SaveSettingsAsync(SecureSettingsModel settings)
         {
             var directory = Path.GetDirectoryName(_settingsFilePath);
+            if(directory == null)
+            {
+                return false;
+            }
+
             if (!Directory.Exists(directory))
             {
                 Directory.CreateDirectory(directory);

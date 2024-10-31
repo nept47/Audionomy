@@ -33,7 +33,7 @@
         private string _openedFolderPath = string.Empty;
 
         [ObservableProperty]
-        private string _selectedLanguage = string.Empty;
+        private string? _selectedLanguage = string.Empty;
 
         [ObservableProperty]
         private bool _generateSingleFile = false;
@@ -75,14 +75,14 @@
         public async void OnNavigatedTo()
         {
             _appSettings = await _appSettingsService.LoadSettingsAsync();
-            
+
             if (!_isInitialized)
             {
                 ComboBoxLanguages = new ObservableCollection<string>(_appSettings.AzureSpeechServiceLanguageSelection);
 
                 _userSettings = await _userSettingService.LoadSettingsAsync();
-                SelectedLanguage = _userSettings.LastSelectedLanguage;
-                GenerateSingleFile = _userSettings.LastSelectedFileModeIsSingle;
+                SelectedLanguage = _userSettings.TranscriptionSettings.LanguageCode;
+                GenerateSingleFile = _userSettings.TranscriptionSettings.IsSigleFileExportMode;
 
                 _isInitialized = true;
             }
@@ -97,7 +97,7 @@
             OpenFolderDialog openFolderDialog = new()
             {
                 Multiselect = false,
-                InitialDirectory = OpenedFolderPath ?? (_userSettings.LastSelectedFolder ?? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments))
+                InitialDirectory = OpenedFolderPath ?? (_userSettings.TranscriptionSettings.OpenFolderPath ?? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments))
             };
 
             if (openFolderDialog.ShowDialog() != true)
@@ -123,12 +123,12 @@
             {
                 Error = new ErrorViewModel();
 
-                await _userSettingService.SaveSettingsAsync(new UserSettingsModel()
-                {
-                    LastSelectedFileModeIsSingle = GenerateSingleFile,
-                    LastSelectedFolder = OpenedFolderPath,
-                    LastSelectedLanguage = SelectedLanguage,
-                });
+
+                _userSettings.TranscriptionSettings.IsSigleFileExportMode = GenerateSingleFile;
+                _userSettings.TranscriptionSettings.OpenFolderPath = OpenedFolderPath;
+                _userSettings.TranscriptionSettings.LanguageCode = SelectedLanguage;
+                
+                await _userSettingService.SaveSettingsAsync(_userSettings);
 
                 if (string.IsNullOrEmpty(_appSettings.AzureSpeechServiceKey) || string.IsNullOrEmpty(_appSettings.AzureSpeechServiceLocation))
                 {
@@ -139,6 +139,12 @@
                 if (string.IsNullOrEmpty(OpenedFolderPath))
                 {
                     Error = new ErrorViewModel("Folder is not selected.", InfoBarSeverity.Warning);
+                    return;
+                }
+
+                if (string.IsNullOrEmpty(SelectedLanguage))
+                {
+                    Error = new ErrorViewModel("Please select a language.", InfoBarSeverity.Warning);
                     return;
                 }
 
@@ -153,7 +159,7 @@
 
                 ShowTranscribe = Visibility.Hidden;
                 ShowCancelTranscribe = Visibility.Visible;
-                var progress = new Progress<TranscriptionResult>(result =>
+                var progress = new Progress<TranscriptionResultModel>(result =>
                 {
                     if (result.Completed)
                     {
@@ -170,11 +176,11 @@
 
                 if (GenerateSingleFile)
                 {
-                    await _transcribeFilesService.TranscribeAndSaveAsync(files, new SpeechTranscriptionExtentOptions { LanguageCode = SelectedLanguage }, progress, _cts.Token);
+                    await _transcribeFilesService.TranscribeAndSaveAsync(files, new SpeechTranscriptionExtentOptionsModel { LanguageCode = SelectedLanguage }, progress, _cts.Token);
                 }
                 else
                 {
-                    await _transcribeFilesService.TranscribeAndSaveAsync(files, new SpeechTranscriptionBaseOptions { LanguageCode = SelectedLanguage }, progress, _cts.Token);
+                    await _transcribeFilesService.TranscribeAndSaveAsync(files, new SpeechTranscriptionBaseOptionsModel { LanguageCode = SelectedLanguage }, progress, _cts.Token);
                 }
             }
             catch (OperationCanceledException ex)

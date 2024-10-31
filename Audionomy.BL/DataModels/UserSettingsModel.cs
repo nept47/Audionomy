@@ -2,10 +2,8 @@
 {
     public class UserSettingsModel
     {
-        public string LastSelectedFolder { get; set; } = string.Empty;
+        public TranscriptionSettingModel TranscriptionSettings { get; set; } = new TranscriptionSettingModel();
 
-        public string LastSelectedLanguage { get; set; } = string.Empty;
-
-        public bool LastSelectedFileModeIsSingle { get; set; }
+        public SpeechSynthesisSettingModel SpeechSynthesisSettings { get; set; } = new SpeechSynthesisSettingModel();
     }
 }

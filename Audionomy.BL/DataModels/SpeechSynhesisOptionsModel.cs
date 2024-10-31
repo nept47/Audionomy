@@ -1,6 +1,6 @@
 ﻿namespace Audionomy.BL.DataModels
 {
-    public class SpeechSynhesisOptions
+    public class SpeechSynhesisOptionsModel
     {
         public string LanguageCode { get; set; } = string.Empty;
         

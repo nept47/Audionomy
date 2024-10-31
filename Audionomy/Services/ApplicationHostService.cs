@@ -50,7 +50,7 @@ namespace Audionomy.Services
                 )!;
                 _navigationWindow!.ShowWindow();
 
-                _navigationWindow.Navigate(typeof(Views.Pages.TranscribePage));
+                _navigationWindow.Navigate(typeof(Views.Pages.SpeechSynthesizePage));
             }
 
             await Task.CompletedTask;

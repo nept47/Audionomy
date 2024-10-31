@@ -14,7 +14,7 @@
             _settingsService = settingsService;
         }
 
-        public async Task TranscribeAndSaveAsync(List<FileInfo> wavFiles, SpeechTranscriptionBaseOptions speechTranscriptionOptions, IProgress<TranscriptionResult>? progress = null, CancellationToken cancellationToken = default)
+        public async Task TranscribeAndSaveAsync(List<FileInfo> wavFiles, SpeechTranscriptionBaseOptionsModel speechTranscriptionOptions, IProgress<TranscriptionResultModel>? progress = null, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrEmpty(speechTranscriptionOptions.LanguageCode))
             {
@@ -28,7 +28,7 @@
                 throw new ArgumentException("Input file list cannot be null or empty.", nameof(wavFiles));
             }
 
-            var settings = _settingsService.LoadSettings();
+            var settings = await _settingsService.LoadSettingsAsync();
             var speechConfig = SpeechConfig.FromSubscription(settings.AzureSpeechServiceKey, settings.AzureSpeechServiceLocation);
             speechConfig.SpeechRecognitionLanguage = speechTranscriptionOptions.LanguageCode;
 
@@ -44,7 +44,7 @@
                     continue;
                 }
 
-                progress?.Report(new TranscriptionResult(file.Name, totalFileCount, transcribedFileCount));
+                progress?.Report(new TranscriptionResultModel(file.Name, totalFileCount, transcribedFileCount));
 
                 //await Task.Delay(3000);
 
@@ -63,10 +63,10 @@
                 await outputFile.WriteLineAsync(text);
             }
 
-            progress?.Report(new TranscriptionResult("Completed", totalFileCount, transcribedFileCount, true));
+            progress?.Report(new TranscriptionResultModel("Completed", totalFileCount, transcribedFileCount, true));
         }
 
-        public async Task TranscribeAndSaveAsync(List<FileInfo> wavFiles, SpeechTranscriptionExtentOptions speechTranscriptionOptions, IProgress<TranscriptionResult>? progress = null, CancellationToken cancellationToken = default)
+        public async Task TranscribeAndSaveAsync(List<FileInfo> wavFiles, SpeechTranscriptionExtentOptionsModel speechTranscriptionOptions, IProgress<TranscriptionResultModel>? progress = null, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrEmpty(speechTranscriptionOptions.LanguageCode))
             {
@@ -95,7 +95,7 @@
 
             var filePath = Path.Combine(path, speechTranscriptionOptions.OutputFilename);
 
-            var settings = _settingsService.LoadSettings();
+            var settings = await _settingsService.LoadSettingsAsync();
             var speechConfig = SpeechConfig.FromSubscription(settings.AzureSpeechServiceKey, settings.AzureSpeechServiceLocation);
             speechConfig.SpeechRecognitionLanguage = speechTranscriptionOptions.LanguageCode;
             var totalFileCount = wavFiles.Count;
@@ -110,7 +110,7 @@
                     continue;
                 }
 
-                progress?.Report(new TranscriptionResult(file.Name, totalFileCount, transcribedFileCount));
+                progress?.Report(new TranscriptionResultModel(file.Name, totalFileCount, transcribedFileCount));
 
                 //await Task.Delay(3000);
 
@@ -126,7 +126,7 @@
                 await outputFile.WriteLineAsync($"{file.Name}|{text}");
             }
 
-            progress?.Report(new TranscriptionResult("Completed", totalFileCount, transcribedFileCount, true));
+            progress?.Report(new TranscriptionResultModel("Completed", totalFileCount, transcribedFileCount, true));
         }
 
         private static string FileToText(SpeechRecognitionResult speechRecognitionResult)
@@ -152,7 +152,12 @@
             if (files == null || files.Count == 0)
                 return true; // If the list is empty or null, we consider this as true.
 
-            string firstDirectory = files[0].DirectoryName;
+            string? firstDirectory = files[0].DirectoryName;
+
+            if(string.IsNullOrEmpty(firstDirectory))
+            {
+                throw new Exception("First file has no valid directory.");
+            }
 
             // Check if all files have the same directory
             return files.All(file => file.DirectoryName == firstDirectory);
