@@ -1,11 +1,6 @@
 ﻿using Audionomy.BL.DataModels;
-using Audionomy.BL.Helpers;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using Audionomy.BL.Interfaces;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace Audionomy.BL.Services
 {
@@ -33,8 +28,9 @@ namespace Audionomy.BL.Services
                 var fileContent = await reader.ReadToEndAsync();
                 return JsonSerializer.Deserialize<UserSettingsModel>(fileContent) ?? new UserSettingsModel();
             }
-            catch (Exception ex)
+            catch
             {
+                // TODO: Handle exception
                 return new UserSettingsModel();
             }
         }
@@ -42,6 +38,11 @@ namespace Audionomy.BL.Services
         public async Task<bool> SaveSettingsAsync(UserSettingsModel settings)
         {
             var directory = Path.GetDirectoryName(_settingsFilePath);
+            if (directory == null)
+            {
+                return false;
+            }
+
             if (!Directory.Exists(directory))
             {
                 Directory.CreateDirectory(directory);

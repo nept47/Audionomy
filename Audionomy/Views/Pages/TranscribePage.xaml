@@ -49,7 +49,7 @@
                 <ui:TextBlock FontSize="{DynamicResourceExtension ControlContentThemeFontSize}"  VerticalAlignment="Center" Text="Language" 
                               Padding="11,5,11,6"/>
             </Border>
-            <ComboBox  HorizontalAlignment="Left" Grid.Column="1" Margin="16,0,0,0"
+            <ComboBox  HorizontalAlignment="Left" Grid.Column="1" Margin="16,0,0,0" MinWidth="100px"
                        SelectedValue="{Binding ViewModel.SelectedLanguage, Mode=TwoWay}"
                        ItemsSource="{Binding ViewModel.ComboBoxLanguages, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:TranscribePage}, Mode=OneWay}"
                        >
@@ -73,8 +73,8 @@
             </Border>
             <CheckBox Grid.Column="1" Margin="16,0,0,0"  Grid.Row="2"  IsChecked="{Binding ViewModel.GenerateSingleFile, Mode=TwoWay}"/>
         </Grid>
-        <ui:Button Grid.Row="3" Width="200" Margin="0,15,0,0" Command="{Binding ViewModel.TranscribeCommand, Mode=OneWay}"  Visibility="{Binding ViewModel.ShowTranscribe, Mode=OneWay}" Content="Start transcription" Icon="Fluent24" />
-        <ui:Button Grid.Row="3" Width="200" Margin="0,15,0,0" Command="{Binding ViewModel.CancelTranscribeCommand, Mode=OneWay}" Visibility="{Binding ViewModel.ShowCancelTranscribe, Mode=OneWay}" Content="Cancel transcription" Icon="Fluent24" />
+        <ui:Button Grid.Row="3" HorizontalAlignment="Stretch" Margin="0,30,0,0" Command="{Binding ViewModel.TranscribeCommand, Mode=OneWay}"  Visibility="{Binding ViewModel.ShowTranscribe, Mode=OneWay}" Content="Generate text file(s)" Icon="Fluent24" />
+        <ui:Button Grid.Row="3" HorizontalAlignment="Stretch" Margin="0,30,0,0" Command="{Binding ViewModel.CancelTranscribeCommand, Mode=OneWay}" Visibility="{Binding ViewModel.ShowCancelTranscribe, Mode=OneWay}" Content="Cancel transcription" Icon="Fluent24" />
 
         <ui:InfoBar Grid.Row="4" VerticalAlignment="Bottom" Message="{Binding ViewModel.Error.Message}" Severity="{Binding ViewModel.Error.Severity}" IsOpen="{Binding ViewModel.Error.IsOpen, Mode=TwoWay}"/>
         <StackPanel VerticalAlignment="Bottom" Grid.Row="4" Margin="0,0,0,0" Visibility="{Binding ViewModel.Progress.Visibility}" >

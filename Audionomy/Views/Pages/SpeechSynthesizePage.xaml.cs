@@ -4,11 +4,11 @@
     using Wpf.Ui.Controls;
 
     /// <summary>
-    /// Interaction logic for TranscribePage.xaml
+    /// Interaction logic for SynthesizePage.xaml
     /// </summary>
-    public partial class TranscribePage : INavigableView<TranscribeViewModel>
+    public partial class SpeechSynthesizePage : INavigableView<SpeechSynthesizeViewModel>
     {
-        public TranscribePage(TranscribeViewModel viewModel)
+        public SpeechSynthesizePage(SpeechSynthesizeViewModel viewModel)
         {
             ViewModel = viewModel;
             DataContext = this;
@@ -16,6 +16,6 @@
             InitializeComponent();
         }
 
-        public TranscribeViewModel ViewModel { get; }
+        public SpeechSynthesizeViewModel ViewModel { get; }
     }
 }

@@ -1,0 +1,70 @@
+﻿<Page x:Class="Audionomy.Views.Pages.SpeechSynthesizePage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:Audionomy.Views.Pages"
+      mc:Ignorable="d" 
+      d:DesignHeight="450" d:DesignWidth="800"
+      Title="SpeechSynthesizePage"
+      xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+      d:DataContext="{d:DesignInstance local:SpeechSynthesizePage, IsDesignTimeCreatable=False}"
+      ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
+      ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+      Foreground="{DynamicResource TextFillColorPrimaryBrush}">
+
+
+
+    <Grid Margin="0,0,0,0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions >
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+            
+        </Grid.ColumnDefinitions>
+        <ui:TextBlock Grid.Row="0" Appearance="Secondary" FontTypography="Caption" Text="Text" Margin="1,0,0,4" />
+        <ui:TextBox  Grid.Row="1" Grid.Column="0" HorizontalAlignment="Stretch" Height="75" AcceptsReturn="True"
+              PlaceholderText="Enter text or load from file..." TextWrapping="Wrap" Text="{Binding ViewModel.TextToSynthesize, Mode=TwoWay}" />
+
+
+        <ui:Button Grid.Row="1" Grid.Column="1" Content="" ToolTipService.ToolTip="Load file" Command="{Binding ViewModel.OpenFileCommand}" VerticalAlignment="Stretch" Icon="{ui:SymbolIcon Symbol=FolderOpen20, Filled=True}" Margin="5,0,0,0"/>
+
+        <StackPanel Orientation="Horizontal" Grid.Row="2" Grid.ColumnSpan="2" Margin="0,15,0,0">
+            <ui:TextBlock FontSize="{DynamicResourceExtension ControlContentThemeFontSize}" VerticalAlignment="Center" Text="Language" />
+            <ComboBox Margin="10,0,0,0" HorizontalAlignment="Left" MinWidth="100px"
+               SelectedValue="{Binding ViewModel.SelectedLanguage, Mode=TwoWay}"                    
+               ItemsSource="{Binding ViewModel.ComboBoxLanguages, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:SpeechSynthesizePage}, Mode=OneWay}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding}" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <ui:TextBlock Margin="15,0,0,0" FontSize="{DynamicResourceExtension ControlContentThemeFontSize}" VerticalAlignment="Center" Text="Save text to file" />
+            <CheckBox  Margin="15,0,0,0" IsChecked="{Binding ViewModel.GenerateTransriptionFile, Mode=TwoWay}"/>
+
+
+        </StackPanel>
+
+        <ui:Button Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,50,0,0" HorizontalAlignment="Stretch"  Command="{Binding ViewModel.GenerateFileCommand, Mode=OneWay}"  Visibility="{Binding ViewModel.ShowTranscribe, Mode=OneWay}" Content="Generate audio file"  />
+        <!--<ui:Button Grid.Row="4" Width="200" Margin="0,15,0,0" Command="{Binding ViewModel.CancelTranscribeCommand, Mode=OneWay}" Visibility="{Binding ViewModel.ShowCancelTranscribe, Mode=OneWay}" Content="Cancel transcription" Icon="Fluent24" />-->
+
+        <ui:InfoBar Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" VerticalAlignment="Bottom" Message="{Binding ViewModel.Error.Message}" Severity="{Binding ViewModel.Error.Severity}" IsOpen="{Binding ViewModel.Error.IsOpen, Mode=TwoWay}"/>
+        <StackPanel VerticalAlignment="Bottom" Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,0" Visibility="{Binding ViewModel.Progress.Visibility}" >
+            <ProgressBar Value="{Binding ViewModel.Progress.Value, Mode=OneWay}" Maximum="{Binding ViewModel.Progress.MaxValue, Mode=OneWay}" />
+            <DockPanel LastChildFill="True" >
+                <ui:TextBlock VerticalAlignment="Center" Text="{Binding ViewModel.Progress.CurrentAction}" Padding="0,5,11,6"/>
+                <ui:TextBlock VerticalAlignment="Center" HorizontalAlignment="Right" Text="{Binding ViewModel.Progress.Summary}" Padding="0,5,11,6"/>
+
+            </DockPanel>
+        </StackPanel>
+
+    </Grid>
+</Page>

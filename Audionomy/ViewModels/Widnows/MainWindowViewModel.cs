@@ -19,19 +19,18 @@ namespace Audionomy.ViewModels.Widnows
         {
             new NavigationViewItem()
             {
-                Content = "Transcribe",
-                Icon = new SymbolIcon { Symbol = SymbolRegular.DocumentText20 },
-                ToolTip = "Transcribe WAV File to Text",
-                TargetPageType = typeof(Views.Pages.TranscribePage),              
+                Content = "Audio Synthesis",
+                Icon = new SymbolIcon { Symbol = SymbolRegular.Speaker220 },
+                ToolTip = "Convert Text to WAV"    ,
+                TargetPageType = typeof(Views.Pages.SpeechSynthesizePage)
             },
             new NavigationViewItem()
             {
-                Content = "Synthesize",
-                Icon = new SymbolIcon { Symbol = SymbolRegular.Speaker220 },
-                ToolTip = "Synthesize Text to WAV Format"    ,
-                TargetPageType = typeof(Views.Pages.SynthesizePage)
+                Content = "Text Transcription",
+                Icon = new SymbolIcon { Symbol = SymbolRegular.DocumentText20 },
+                ToolTip = "Transcribe WAV File to Text",
+                TargetPageType = typeof(Views.Pages.TranscribePage),              
             }
-
         };
 
         [ObservableProperty]

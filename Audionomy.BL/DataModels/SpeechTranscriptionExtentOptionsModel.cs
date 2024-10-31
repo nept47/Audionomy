@@ -1,6 +1,6 @@
 ﻿namespace Audionomy.BL.DataModels
 {
-    public class SpeechTranscriptionExtentOptions : SpeechTranscriptionBaseOptions
+    public class SpeechTranscriptionExtentOptionsModel : SpeechTranscriptionBaseOptionsModel
     {
         public string? OutputFilename { get; set; }
     }
