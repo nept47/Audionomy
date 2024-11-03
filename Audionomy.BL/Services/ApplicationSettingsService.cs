@@ -3,6 +3,7 @@
     using Audionomy.BL.DataModels;
     using Audionomy.BL.Interfaces;
     using Audionomy.BL.Utilities;
+    using System.Net.Http.Headers;
     using System.Text.Json;
 
     public class ApplicationSettingsService : IApplicationSettingsService
@@ -33,7 +34,7 @@
                 var settings = JsonSerializer.Deserialize<ApplicationSettingsModel>(_aesEncryption.Decrypt(fileContent)) ?? new ApplicationSettingsModel();
                 settings.ActiveLanguages = settings.ActiveLanguages.OrderBy(x => x.Description).ToList();
                 settings.Languages = settings.Languages.OrderBy(x => x.Description).ToList();
-               
+
                 return settings;
             }
             catch
@@ -48,16 +49,29 @@
             var directory = Path.GetDirectoryName(_settingsFilePath);
             if (directory == null)
             {
-                return false;
+                throw new Exception("Can't find roaming path.");
             }
 
             if (!Directory.Exists(directory))
             {
                 Directory.CreateDirectory(directory);
             }
+
             try
             {
                 var settings = await LoadSettingsAsync();
+
+
+                if (string.IsNullOrWhiteSpace(key))
+                {
+                    throw new Exception("Azure key can not be empty.");
+                }
+
+                if(string.IsNullOrWhiteSpace(region))
+                {
+                    throw new Exception("Azure region can not be empty.");
+                }
+
                 settings.Region = region;
                 settings.Key = key;
 
@@ -70,7 +84,7 @@
             }
             catch
             {
-                return false;
+                throw;
             }
         }
 
@@ -103,6 +117,7 @@
 
         private static async Task<List<AzureVoiceModel>> GetVoicesFromApiAsync(string key, string region)
         {
+            try { 
             var result = new List<AzureVoiceModel>();
             using (var client = new HttpClient())
             {
@@ -122,6 +137,10 @@
                 }
             }
             return result ?? [];
+            }catch(Exception ex)
+            {
+                throw;
+            }
         }
     }
 }

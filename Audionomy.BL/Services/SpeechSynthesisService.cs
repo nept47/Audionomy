@@ -26,8 +26,6 @@
             var tmpOutputFilename = string.Concat(fullFilename.AsSpan(0, fullFilename.Length - fullFilename.Length), "_tmp.wav");
 
             progress?.Report(new SpeechSynthesisResultModel(speechSynhesisOptions.OutputFile, "Synthesizing.", 1, 1));
-            
-            //await Task.Delay(3000);
 
             using (var audioConfig = AudioConfig.FromWavFileOutput(tmpOutputFilename))
             {
@@ -44,28 +42,29 @@
 
             await AudioConverterUtility.ConvertToAsteriskFormatAsync(tmpOutputFilename, speechSynhesisOptions.OutputFile);
 
-            //await Task.Delay(3000);
+            await ExportTransctiption(speechSynhesisOptions, progress);
 
+            try
+            {
+                progress?.Report(new SpeechSynthesisResultModel(speechSynhesisOptions.OutputFile, "Removing temp file(s)...", 1, 1));
+                File.Delete(tmpOutputFilename);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+
+            progress?.Report(new SpeechSynthesisResultModel(speechSynhesisOptions.OutputFile, "Completed.", 1, 1, true));
+        }
+
+        public async Task ExportTransctiption(SpeechSynhesisOptionsModel speechSynhesisOptions, IProgress<SpeechSynthesisResultModel>? progress)
+        {
             if (speechSynhesisOptions.ExportTranscription)
             {
                 progress?.Report(new SpeechSynthesisResultModel(speechSynhesisOptions.OutputFile, "Creating Transcription File.", 1, 1));
                 await using var outputFile = new StreamWriter(speechSynhesisOptions.OutputFile.GetFullFilenameWithoutExtenstion() + ".txt", false);
                 await outputFile.WriteLineAsync(speechSynhesisOptions.Text);
             }
-            //await Task.Delay(3000);
-            try
-            {
-                progress?.Report(new SpeechSynthesisResultModel(speechSynhesisOptions.OutputFile, "Removing temp file(s)...", 1, 1));
-                File.Delete(tmpOutputFilename);
-            }
-            catch
-            {
-                // TODO: Handle the exception
-            }
-            //await Task.Delay(3000);
-            progress?.Report(new SpeechSynthesisResultModel(speechSynhesisOptions.OutputFile, "Completed.", 1, 1, true));
-
-
         }
 
         private static void Validate(ApplicationSettingsModel settings, SpeechSynhesisOptionsModel speechSynhesisOptions)

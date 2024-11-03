@@ -22,13 +22,16 @@
         private string _azureLocation = String.Empty;
 
         [ObservableProperty]
-        private bool _isLanguageSelectionPanelVisible = false;
+        private bool _isLanguageSelectionTabEnabled = false;
 
         [ObservableProperty]
         private ObservableCollection<VoiceLanguageModel> _availableLanguages = [];
 
         [ObservableProperty]
         private ObservableCollection<VoiceLanguageModel> _activeLanguages = [];
+
+        [ObservableProperty]
+        private InfoMessageModel _azureInfoBar = new InfoMessageModel();
 
         private readonly IApplicationSettingsService _applicationSettingsService;
 
@@ -37,10 +40,14 @@
             _applicationSettingsService = applicationSettingsService;
         }
 
-        public void OnNavigatedFrom() { }
+        public void OnNavigatedFrom()
+        {
+            AzureInfoBar = new InfoMessageModel();
+        }
 
         public void OnNavigatedTo()
         {
+            AzureInfoBar = new InfoMessageModel();
             if (!_isInitialized)
                 InitializeViewModel().ConfigureAwait(false);
         }
@@ -48,10 +55,13 @@
         private async Task InitializeViewModel()
         {
             var settings = await _applicationSettingsService.LoadSettingsAsync();
+
             AzureSpeechServiceKey = settings.Key;
             AzureLocation = settings.Region;
+
+            IsLanguageSelectionTabEnabled = !string.IsNullOrEmpty(settings.Key) && !string.IsNullOrEmpty(settings.Region);
+
             _allLanguages = settings.Languages;
-            
             AvailableLanguages = new ObservableCollection<VoiceLanguageModel>(settings.Languages
                 .Where(x => settings.ActiveLanguages.All(y => y.Locale != x.Locale))
                 .ToList());
@@ -68,9 +78,21 @@
         [RelayCommand]
         private async Task OnSaveAzureCredentials()
         {
-            await _applicationSettingsService.SaveAzureCredentialsAsync(AzureSpeechServiceKey, AzureLocation);
-            var settings = await _applicationSettingsService.LoadSettingsAsync();
-            AvailableLanguages = new ObservableCollection<VoiceLanguageModel>(settings.Languages);
+            AzureInfoBar = new InfoMessageModel();
+            try
+            {
+                await _applicationSettingsService.SaveAzureCredentialsAsync(AzureSpeechServiceKey, AzureLocation);
+                var settings = await _applicationSettingsService.LoadSettingsAsync();
+                IsLanguageSelectionTabEnabled = !string.IsNullOrEmpty(settings.Key) && !string.IsNullOrEmpty(settings.Region);
+                AvailableLanguages = new ObservableCollection<VoiceLanguageModel>(settings.Languages);
+                AzureInfoBar = new InfoMessageModel("Credentials saved succesfully.", InfoBarSeverity.Success);
+                CloseAzureInfoBar();
+            }
+            catch (Exception ex)
+            {
+                AzureInfoBar = new InfoMessageModel(ex.Message, InfoBarSeverity.Error);
+            }
+
         }
 
         public async Task AddActiveLanguage(VoiceLanguageModel language)
@@ -96,16 +118,17 @@
         }
 
         [RelayCommand]
-        private void OnToggleLanguageVisibility()
-        {
-            IsLanguageSelectionPanelVisible = !IsLanguageSelectionPanelVisible;
-        }
-        [RelayCommand]
         private async Task OnClearActiveLanguages()
         {
             ActiveLanguages.Clear();
             AvailableLanguages = new ObservableCollection<VoiceLanguageModel>(_allLanguages);
             await _applicationSettingsService.SaveActiveLanguagesAsync(ActiveLanguages.ToList());
+        }
+
+        async Task CloseAzureInfoBar()
+        {
+            await Task.Delay(500);
+            AzureInfoBar = new InfoMessageModel();
         }
     }
 }
