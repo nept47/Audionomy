@@ -44,7 +44,7 @@
                 <ui:Button Grid.Row="1" HorizontalAlignment="Right" Width="150" Margin="0,10,0,0" Command="{Binding ViewModel.SaveAzureCredentialsCommand, Mode=OneWay}" Content="Save" Icon="Fluent24" />
             </Grid>
         </TabItem>
-        <TabItem Loaded="TabItem_Loaded" >
+        <TabItem >
             <TabItem.Header>
                 <StackPanel Orientation="Horizontal">
                     <ui:SymbolIcon Margin="0,0,6,0" Symbol="LocalLanguage16" />
