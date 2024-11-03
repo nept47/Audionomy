@@ -48,7 +48,7 @@
         private ProgressViewModel _progress = new ProgressViewModel();
 
         [ObservableProperty]
-        private ErrorViewModel _error = new ErrorViewModel();
+        private InfoMessageModel _transcriptionInfoBar = new InfoMessageModel();
 
         [ObservableProperty]
         private ObservableCollection<VoiceLanguageModel> _comboBoxLanguages;
@@ -97,7 +97,7 @@
         [RelayCommand]
         public void OnOpenFolder()
         {
-            Error = new ErrorViewModel();
+            TranscriptionInfoBar = new InfoMessageModel();
             Progress = new ProgressViewModel();
 
             OpenFolderDialog openFolderDialog = new()
@@ -127,8 +127,7 @@
         {
             try
             {
-                Error = new ErrorViewModel();
-
+                TranscriptionInfoBar = new InfoMessageModel();
 
                 _userSettings.TranscriptionSettings.IsSigleFileExportMode = GenerateSingleFile;
                 _userSettings.TranscriptionSettings.OpenFolderPath = OpenedFolderPath;
@@ -144,13 +143,13 @@
 
                 if (string.IsNullOrEmpty(OpenedFolderPath))
                 {
-                    Error = new ErrorViewModel("Folder is not selected.", InfoBarSeverity.Warning);
+                    TranscriptionInfoBar = new InfoMessageModel("Folder is not selected.", InfoBarSeverity.Warning);
                     return;
                 }
 
                 if (string.IsNullOrEmpty(SelectedLanguage.Locale))
                 {
-                    Error = new ErrorViewModel("Please select a language.", InfoBarSeverity.Warning);
+                    TranscriptionInfoBar = new InfoMessageModel("Please select a language.", InfoBarSeverity.Warning);
                     return;
                 }
 
@@ -159,7 +158,7 @@
 
                 if (_audioFileCountingService.ValidWavFiles(OpenedFolderPath) == 0)
                 {
-                    Error = new ErrorViewModel("There are not wav files in the selected folder.", InfoBarSeverity.Warning);
+                    TranscriptionInfoBar = new InfoMessageModel("There are not wav files in the selected folder.", InfoBarSeverity.Warning);
                     return;
                 }
 
@@ -191,11 +190,11 @@
             }
             catch (OperationCanceledException ex)
             {
-                Error = new ErrorViewModel(ex.Message, InfoBarSeverity.Warning);
+                TranscriptionInfoBar = new InfoMessageModel(ex.Message, InfoBarSeverity.Warning);
             }
             catch (Exception ex)
             {
-                Error = new ErrorViewModel(ex.Message, InfoBarSeverity.Error);
+                TranscriptionInfoBar = new InfoMessageModel(ex.Message, InfoBarSeverity.Error);
             }
             finally
             {

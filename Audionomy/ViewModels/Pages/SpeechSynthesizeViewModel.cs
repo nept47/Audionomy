@@ -55,7 +55,7 @@
         private ProgressViewModel _progress = new ProgressViewModel();
 
         [ObservableProperty]
-        private ErrorViewModel _error = new ErrorViewModel();
+        private InfoMessageModel _synthesisInfoBar = new InfoMessageModel();
 
         [ObservableProperty]
         private int _selectedLanguageIndex = 0;
@@ -77,7 +77,6 @@
         {
             DisposeAudioResources();
             DeleteTempAudionFileIfExist();
-            TextToSynthesize= string.Empty;
             _tempSynthesizedFile = new TempSynthesizedFileModel();
         }
 
@@ -100,7 +99,7 @@
         [RelayCommand]
         public async Task OnOpenFile()
         {
-            Error = new ErrorViewModel();
+            SynthesisInfoBar = new InfoMessageModel();
             Progress = new ProgressViewModel();
             _selectedTxtFileName = null;
 
@@ -150,7 +149,7 @@
             DisposeAudioResources();
             try
             {
-                Error = new ErrorViewModel();
+                SynthesisInfoBar = new InfoMessageModel();
 
                 _userSettings.SpeechSynthesisSettings.GenerateTranscriptionFile = GenerateTransriptionFile;
                 _userSettings.SpeechSynthesisSettings.Language = SelectedLanguage;
@@ -166,13 +165,13 @@
 
                 if (string.IsNullOrEmpty(textToSynthesize))
                 {
-                    Error = new ErrorViewModel("The text can't be empty.", InfoBarSeverity.Warning);
+                    SynthesisInfoBar = new InfoMessageModel("The text can't be empty.", InfoBarSeverity.Warning);
                     return;
                 }
 
                 if (string.IsNullOrEmpty(SelectedLanguage?.Locale))
                 {
-                    Error = new ErrorViewModel("Please select a language.", InfoBarSeverity.Warning);
+                    SynthesisInfoBar = new InfoMessageModel("Please select a language.", InfoBarSeverity.Warning);
                     return;
                 }
 
@@ -194,7 +193,7 @@
 
                 if (string.IsNullOrEmpty(filePath))
                 {
-                    Error = new ErrorViewModel("File name is invalid", InfoBarSeverity.Warning);
+                    SynthesisInfoBar = new InfoMessageModel("File name is invalid", InfoBarSeverity.Warning);
                     return;
                 }
 
@@ -203,44 +202,46 @@
 
                 _cts = new CancellationTokenSource();
 
+                SpeechSynhesisOptionsModel speechSynhesisOptions = new SpeechSynhesisOptionsModel()
+                {
+                    ExportTranscription = GenerateTransriptionFile,
+                    LanguageCode = SelectedLanguage.Locale,
+                    OutputFile = filePath,
+                    Text = textToSynthesize
+                };
+
+                var progress = new Progress<SpeechSynthesisResultModel>(result =>
+                {
+                    if (result.Completed)
+                    {
+                        Progress = new ProgressViewModel(result.TotalFileCount, result.TranscribedFileCount, $"{result.FilePath}", string.Empty);
+                    }
+                    else
+                    {
+                        Progress = new ProgressViewModel(result.TotalFileCount, result.TranscribedFileCount, $"{result.FilePath}...{result.ProgressStep}", $"{result.TranscribedFileCount}/{result.TotalFileCount}");
+                    }
+                });
+
                 if (!SynthesizedFileExists())
                 {
-                    SpeechSynhesisOptionsModel speechSynhesisOptions = new SpeechSynhesisOptionsModel()
-                    {
-                        ExportTranscription = GenerateTransriptionFile,
-                        LanguageCode = SelectedLanguage.Locale,
-                        OutputFile = filePath,
-                        Text = textToSynthesize
-                    };
-
-                    var progress = new Progress<SpeechSynthesisResultModel>(result =>
-                    {
-                        if (result.Completed)
-                        {
-                            Progress = new ProgressViewModel(result.TotalFileCount, result.TranscribedFileCount, $"{result.FilePath}", string.Empty);
-                        }
-                        else
-                        {
-                            Progress = new ProgressViewModel(result.TotalFileCount, result.TranscribedFileCount, $"{result.FilePath}...{result.ProgressStep}", $"{result.TranscribedFileCount}/{result.TotalFileCount}");
-                        }
-                    });
-
                     await _speechSynthesisService.GenerateFile(speechSynhesisOptions, progress, _cts.Token);
                 }
                 else
                 {
-
                     File.Move(_tempSynthesizedFile.FilePath, filePath, true);
+                    await _speechSynthesisService.ExportTransctiption(speechSynhesisOptions, progress);
                 }
 
+                SynthesisInfoBar = new InfoMessageModel("Audio file generated.", InfoBarSeverity.Success);
+                CloseSpeechSynthesisInfoBar();
             }
             catch (OperationCanceledException ex)
             {
-                Error = new ErrorViewModel(ex.Message, InfoBarSeverity.Warning);
+                SynthesisInfoBar = new InfoMessageModel(ex.Message, InfoBarSeverity.Warning);
             }
             catch (Exception ex)
             {
-                Error = new ErrorViewModel(ex.Message, InfoBarSeverity.Error);
+                SynthesisInfoBar = new InfoMessageModel(ex.Message, InfoBarSeverity.Error);
             }
             finally
             {
@@ -258,7 +259,7 @@
             DisposeAudioResources();
             try
             {
-                Error = new ErrorViewModel();
+                SynthesisInfoBar = new InfoMessageModel();
 
                 _userSettings.SpeechSynthesisSettings.GenerateTranscriptionFile = GenerateTransriptionFile;
                 _userSettings.SpeechSynthesisSettings.Language = SelectedLanguage;
@@ -274,13 +275,13 @@
 
                 if (string.IsNullOrEmpty(textToSynthesize))
                 {
-                    Error = new ErrorViewModel("The text can't be empty.", InfoBarSeverity.Warning);
+                    SynthesisInfoBar = new InfoMessageModel("The text can't be empty.", InfoBarSeverity.Warning);
                     return;
                 }
 
                 if (string.IsNullOrEmpty(SelectedLanguage?.Locale))
                 {
-                    Error = new ErrorViewModel("Please select a language.", InfoBarSeverity.Warning);
+                    SynthesisInfoBar = new InfoMessageModel("Please select a language.", InfoBarSeverity.Warning);
                     return;
                 }
 
@@ -326,15 +327,15 @@
 
                     _outputDevice.Init(_audioFile);
                     _outputDevice.Play();
-                }                                        
+                }
             }
             catch (OperationCanceledException ex)
             {
-                Error = new ErrorViewModel(ex.Message, InfoBarSeverity.Warning);
+                SynthesisInfoBar = new InfoMessageModel(ex.Message, InfoBarSeverity.Warning);
             }
             catch (Exception ex)
             {
-                Error = new ErrorViewModel(ex.Message, InfoBarSeverity.Error);
+                SynthesisInfoBar = new InfoMessageModel(ex.Message, InfoBarSeverity.Error);
             }
             finally
             {
@@ -372,6 +373,13 @@
         private bool SynthesizedFileExists()
         {
             return _tempSynthesizedFile != null && _tempSynthesizedFile.Locale == SelectedLanguage?.Locale && _tempSynthesizedFile.Text == TextToSynthesize?.Trim() && File.Exists(_tempSynthesizedFile.FilePath);
+        }
+
+
+        async Task CloseSpeechSynthesisInfoBar()
+        {
+            await Task.Delay(1000);
+            SynthesisInfoBar = new InfoMessageModel();
         }
     }
 }

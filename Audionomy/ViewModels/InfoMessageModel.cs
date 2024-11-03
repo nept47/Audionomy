@@ -2,7 +2,7 @@
 {
     using Wpf.Ui.Controls;
 
-    public class ErrorViewModel
+    public class InfoMessageModel
     {
         public string Message { get; set; } = string.Empty;
 
@@ -10,9 +10,9 @@
 
         public InfoBarSeverity Severity { get; set; } = InfoBarSeverity.Informational;
 
-        public ErrorViewModel() { }
+        public InfoMessageModel() { }
 
-        public ErrorViewModel(string message, InfoBarSeverity severity)
+        public InfoMessageModel(string message, InfoBarSeverity severity)
         {
             Message = message;
             Severity = severity;
