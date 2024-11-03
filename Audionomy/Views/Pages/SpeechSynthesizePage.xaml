@@ -33,7 +33,8 @@
         <ui:TextBlock Grid.Row="0" Appearance="Secondary" FontTypography="Caption" Text="Text" Margin="1,0,0,4" />
         <ui:TextBox  Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" Height="75" AcceptsReturn="True"
               PlaceholderText="Enter text or load from file..." TextWrapping="Wrap" Text="{Binding ViewModel.TextToSynthesize, Mode=TwoWay}" />
-        <ui:Button Grid.Row="1" Grid.Column="2" Content="" ToolTipService.ToolTip="Load file" Command="{Binding ViewModel.OpenFileCommand}" VerticalAlignment="Stretch" Icon="{ui:SymbolIcon Symbol=FolderOpen20, Filled=True}" Margin="5,0,0,0"/>
+        <ui:Button Grid.Row="1" Grid.Column="2" Content="" ToolTipService.ToolTip="Load file" Command="{Binding ViewModel.OpenFileCommand}" VerticalAlignment="Stretch"
+                   Icon="{ui:SymbolIcon Symbol=FolderOpen20, Filled=True}" Margin="5,0,0,0"/>
 
         <ui:TextBlock Grid.Row="2" Grid.Column="0" Margin="0,10,0,0" FontSize="{DynamicResourceExtension ControlContentThemeFontSize}" VerticalAlignment="Center" Text="Language" />
         <ComboBox Grid.Row="2" Grid.Column="1" Margin="10,10,0,0" HorizontalAlignment="Left" MinWidth="300px"
@@ -41,10 +42,12 @@
                SelectedIndex="{Binding ViewModel.SelectedLanguageIndex, Mode=TwoWay}"                      
                ItemsSource="{Binding ViewModel.ComboBoxLanguages, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:SpeechSynthesizePage}, Mode=OneWay}">
         </ComboBox>
+        <ui:Button Grid.Row="2" Grid.Column="2" Margin="5,10,0,0" VerticalAlignment="Stretch" ToolTipService.ToolTip="Listen the text" Command="{Binding ViewModel.GenerateTmpFileCommand, Mode=OneWay}"  Visibility="{Binding ViewModel.ShowTranscribe, Mode=OneWay}" Icon="{ui:SymbolIcon Symbol=Speaker216, Filled=True}" />
+
         <ui:TextBlock Grid.Row="3" Grid.Column="0" Margin="0,10,0,0" FontSize="{DynamicResourceExtension ControlContentThemeFontSize}" VerticalAlignment="Center" Text="Save text to file" />
         <CheckBox  Grid.Row="3" Grid.Column="1" Margin="10,10,0,0" IsChecked="{Binding ViewModel.GenerateTransriptionFile, Mode=TwoWay}"/>
 
-        <ui:Button Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,50,0,0" HorizontalAlignment="Stretch"  Command="{Binding ViewModel.GenerateFileCommand, Mode=OneWay}"  Visibility="{Binding ViewModel.ShowTranscribe, Mode=OneWay}" Content="Generate audio file"  />
+        <ui:Button Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,50,0,0" HorizontalAlignment="Stretch"  Command="{Binding ViewModel.GenerateFileCommand, Mode=OneWay}"  Visibility="{Binding ViewModel.ShowTranscribe, Mode=OneWay}" Content="Generate &amp; Save audio file"  />
         <!--<ui:Button Grid.Row="4" Width="200" Margin="0,15,0,0" Command="{Binding ViewModel.CancelTranscribeCommand, Mode=OneWay}" Visibility="{Binding ViewModel.ShowCancelTranscribe, Mode=OneWay}" Content="Cancel transcription" Icon="Fluent24" />-->
 
         <ui:InfoBar Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="3" VerticalAlignment="Bottom" Message="{Binding ViewModel.Error.Message}" Severity="{Binding ViewModel.Error.Severity}" IsOpen="{Binding ViewModel.Error.IsOpen, Mode=TwoWay}"/>
@@ -53,7 +56,6 @@
             <DockPanel LastChildFill="True" >
                 <ui:TextBlock VerticalAlignment="Center" Text="{Binding ViewModel.Progress.CurrentAction}" Padding="0,5,11,6"/>
                 <ui:TextBlock VerticalAlignment="Center" HorizontalAlignment="Right" Text="{Binding ViewModel.Progress.Summary}" Padding="0,5,11,6"/>
-
             </DockPanel>
         </StackPanel>
 

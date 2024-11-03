@@ -3,11 +3,15 @@
     using Audionomy.BL.DataModels;
     using Audionomy.BL.Extensions;
     using Audionomy.BL.Interfaces;
+    using Audionomy.Models;
     using CommunityToolkit.Mvvm.ComponentModel;
     using CommunityToolkit.Mvvm.Input;
     using Microsoft.Win32;
+    using NAudio.Wave;
     using System.Collections.ObjectModel;
     using System.IO;
+    using System.Media;
+    using System.Numerics;
     using Wpf.Ui;
     using Wpf.Ui.Controls;
 
@@ -23,6 +27,9 @@
         private bool _isInitialized;
         private string? _lastSelectedFolder;
         private string? _selectedTxtFileName;
+        private TempSynthesizedFileModel _tempSynthesizedFile;
+        private IWavePlayer _outputDevice;
+        private AudioFileReader _audioFile;
 
         CancellationTokenSource _cts;
 
@@ -66,7 +73,13 @@
             _navigationWindow = (_serviceProvider.GetService(typeof(INavigationWindow)) as INavigationWindow)!;
         }
 
-        public void OnNavigatedFrom() { }
+        public void OnNavigatedFrom()
+        {
+            DisposeAudioResources();
+            DeleteTempAudionFileIfExist();
+            TextToSynthesize= string.Empty;
+            _tempSynthesizedFile = new TempSynthesizedFileModel();
+        }
 
         public async void OnNavigatedTo()
         {
@@ -134,6 +147,7 @@
         [RelayCommand]
         public async Task OnGenerateFile()
         {
+            DisposeAudioResources();
             try
             {
                 Error = new ErrorViewModel();
@@ -189,27 +203,35 @@
 
                 _cts = new CancellationTokenSource();
 
-                SpeechSynhesisOptionsModel speechSynhesisOptions = new SpeechSynhesisOptionsModel()
+                if (!SynthesizedFileExists())
                 {
-                    ExportTranscription = GenerateTransriptionFile,
-                    LanguageCode = SelectedLanguage.Locale,
-                    OutputFile = filePath,
-                    Text = textToSynthesize
-                };
+                    SpeechSynhesisOptionsModel speechSynhesisOptions = new SpeechSynhesisOptionsModel()
+                    {
+                        ExportTranscription = GenerateTransriptionFile,
+                        LanguageCode = SelectedLanguage.Locale,
+                        OutputFile = filePath,
+                        Text = textToSynthesize
+                    };
 
-                var progress = new Progress<SpeechSynthesisResultModel>(result =>
+                    var progress = new Progress<SpeechSynthesisResultModel>(result =>
+                    {
+                        if (result.Completed)
+                        {
+                            Progress = new ProgressViewModel(result.TotalFileCount, result.TranscribedFileCount, $"{result.FilePath}", string.Empty);
+                        }
+                        else
+                        {
+                            Progress = new ProgressViewModel(result.TotalFileCount, result.TranscribedFileCount, $"{result.FilePath}...{result.ProgressStep}", $"{result.TranscribedFileCount}/{result.TotalFileCount}");
+                        }
+                    });
+
+                    await _speechSynthesisService.GenerateFile(speechSynhesisOptions, progress, _cts.Token);
+                }
+                else
                 {
-                    if (result.Completed)
-                    {
-                        Progress = new ProgressViewModel(result.TotalFileCount, result.TranscribedFileCount, $"{result.FilePath}", string.Empty);
-                    }
-                    else
-                    {
-                        Progress = new ProgressViewModel(result.TotalFileCount, result.TranscribedFileCount, $"{result.FilePath}...{result.ProgressStep}", $"{result.TranscribedFileCount}/{result.TotalFileCount}");
-                    }
-                });
 
-                await _speechSynthesisService.GenerateFile(speechSynhesisOptions, progress, _cts.Token);
+                    File.Move(_tempSynthesizedFile.FilePath, filePath, true);
+                }
 
             }
             catch (OperationCanceledException ex)
@@ -228,6 +250,128 @@
             }
 
 
+        }
+
+        [RelayCommand]
+        public async Task OnGenerateTmpFile()
+        {
+            DisposeAudioResources();
+            try
+            {
+                Error = new ErrorViewModel();
+
+                _userSettings.SpeechSynthesisSettings.GenerateTranscriptionFile = GenerateTransriptionFile;
+                _userSettings.SpeechSynthesisSettings.Language = SelectedLanguage;
+                await _userSettingsService.SaveSettingsAsync(_userSettings);
+
+                var textToSynthesize = TextToSynthesize?.Trim();
+
+                if (string.IsNullOrEmpty(_appSettings.Key) || string.IsNullOrEmpty(_appSettings.Region))
+                {
+                    _navigationWindow.Navigate(typeof(Views.Pages.SettingsPage));
+                    return;
+                }
+
+                if (string.IsNullOrEmpty(textToSynthesize))
+                {
+                    Error = new ErrorViewModel("The text can't be empty.", InfoBarSeverity.Warning);
+                    return;
+                }
+
+                if (string.IsNullOrEmpty(SelectedLanguage?.Locale))
+                {
+                    Error = new ErrorViewModel("Please select a language.", InfoBarSeverity.Warning);
+                    return;
+                }
+
+
+                if (!SynthesizedFileExists())
+                {
+                    _tempSynthesizedFile = new TempSynthesizedFileModel()
+                    {
+                        FilePath = Path.GetTempPath() + Guid.NewGuid() + ".wav",
+                        Locale = SelectedLanguage.Locale,
+                        Text = textToSynthesize.Trim()
+                    };
+
+                    _cts = new CancellationTokenSource();
+
+                    SpeechSynhesisOptionsModel speechSynhesisOptions = new SpeechSynhesisOptionsModel()
+                    {
+                        ExportTranscription = false,
+                        LanguageCode = SelectedLanguage.Locale,
+                        OutputFile = _tempSynthesizedFile.FilePath,
+                        Text = textToSynthesize
+                    };
+
+                    var progress = new Progress<SpeechSynthesisResultModel>(result =>
+                    {
+                        if (result.Completed)
+                        {
+                            Progress = new ProgressViewModel(result.TotalFileCount, result.TranscribedFileCount, $"{result.FilePath}", string.Empty);
+                        }
+                        else
+                        {
+                            Progress = new ProgressViewModel(result.TotalFileCount, result.TranscribedFileCount, $"{result.FilePath}...{result.ProgressStep}", $"{result.TranscribedFileCount}/{result.TotalFileCount}");
+                        }
+                    });
+
+                    await _speechSynthesisService.GenerateFile(speechSynhesisOptions, progress, _cts.Token);
+                }
+
+                if (File.Exists(_tempSynthesizedFile.FilePath))
+                {
+                    _outputDevice = new WaveOutEvent();
+                    _audioFile = new AudioFileReader(_tempSynthesizedFile.FilePath);
+
+                    _outputDevice.Init(_audioFile);
+                    _outputDevice.Play();
+                }                                        
+            }
+            catch (OperationCanceledException ex)
+            {
+                Error = new ErrorViewModel(ex.Message, InfoBarSeverity.Warning);
+            }
+            catch (Exception ex)
+            {
+                Error = new ErrorViewModel(ex.Message, InfoBarSeverity.Error);
+            }
+            finally
+            {
+                Progress = new ProgressViewModel();
+                //ShowTranscribe = Visibility.Visible;
+                //ShowCancelTranscribe = Visibility.Hidden;
+            }
+
+
+        }
+
+        private void DisposeAudioResources()
+        {
+            if (_outputDevice != null)
+            {
+                _outputDevice.Dispose();
+                _outputDevice = null;
+            }
+
+            if (_audioFile != null)
+            {
+                _audioFile.Dispose();
+                _audioFile = null;
+            }
+        }
+
+        private void DeleteTempAudionFileIfExist()
+        {
+            if (_tempSynthesizedFile != null && _tempSynthesizedFile.FilePath != null && File.Exists(_tempSynthesizedFile.FilePath))
+            {
+                File.Delete(_tempSynthesizedFile.FilePath);
+            }
+        }
+
+        private bool SynthesizedFileExists()
+        {
+            return _tempSynthesizedFile != null && _tempSynthesizedFile.Locale == SelectedLanguage?.Locale && _tempSynthesizedFile.Text == TextToSynthesize?.Trim() && File.Exists(_tempSynthesizedFile.FilePath);
         }
     }
 }
