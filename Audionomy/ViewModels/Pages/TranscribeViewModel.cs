@@ -16,12 +16,12 @@
     public partial class TranscribeViewModel : ObservableObject, INavigationAware
     {
         private readonly IAudioFileCountingService _audioFileCountingService;
-        private readonly ISettingsService<SecureSettingsModel> _appSettingsService;
-        private readonly ISettingsService<UserSettingsModel> _userSettingService;
+        private readonly IApplicationSettingsService _applicationSettingsService;
+        private readonly IUserSettingsService _userSettingsService;
         private readonly ITranscribeFilesService _transcribeFilesService;
         private readonly IServiceProvider _serviceProvider;
         private readonly INavigationWindow _navigationWindow;
-        private SecureSettingsModel _appSettings;
+        private ApplicationSettingsModel _appSettings;
         private UserSettingsModel _userSettings;
         private bool _isInitialized;
         CancellationTokenSource _cts;
@@ -33,13 +33,16 @@
         private string _openedFolderPath = string.Empty;
 
         [ObservableProperty]
-        private string? _selectedLanguage = string.Empty;
+        private VoiceLanguageModel? _selectedLanguage = new VoiceLanguageModel();
 
         [ObservableProperty]
         private bool _generateSingleFile = false;
 
         [ObservableProperty]
-        private string _numberOfAudioFiles = string.Empty;
+        private string _numberOfAudioFiles = string.Empty; 
+        
+        [ObservableProperty]
+        private int _selectedLanguageIndex = 0;
 
         [ObservableProperty]
         private ProgressViewModel _progress = new ProgressViewModel();
@@ -48,7 +51,7 @@
         private ErrorViewModel _error = new ErrorViewModel();
 
         [ObservableProperty]
-        private ObservableCollection<string> _comboBoxLanguages;
+        private ObservableCollection<VoiceLanguageModel> _comboBoxLanguages;
 
         [ObservableProperty]
         private Visibility _showTranscribe = Visibility.Visible;
@@ -57,14 +60,14 @@
         private Visibility _showCancelTranscribe = Visibility.Hidden;
 
         public TranscribeViewModel(IAudioFileCountingService audioFileCountingService,
-            ISettingsService<SecureSettingsModel> appSettingsService,
-            ISettingsService<UserSettingsModel> userSettingsService,
+            IApplicationSettingsService applicationSettingsService,
+            IUserSettingsService userSettingsService,
             ITranscribeFilesService transcribeFilesService,
             IServiceProvider serviceProvider)
         {
             _audioFileCountingService = audioFileCountingService;
-            _appSettingsService = appSettingsService;
-            _userSettingService = userSettingsService;
+            _applicationSettingsService = applicationSettingsService;
+            _userSettingsService = userSettingsService;
             _transcribeFilesService = transcribeFilesService;
             _serviceProvider = serviceProvider;
             _navigationWindow = (_serviceProvider.GetService(typeof(INavigationWindow)) as INavigationWindow)!;
@@ -74,14 +77,17 @@
 
         public async void OnNavigatedTo()
         {
-            _appSettings = await _appSettingsService.LoadSettingsAsync();
+            _appSettings = await _applicationSettingsService.LoadSettingsAsync();
+            ComboBoxLanguages = new ObservableCollection<VoiceLanguageModel>(_appSettings.ActiveLanguages);
+            _userSettings = await _userSettingsService.LoadSettingsAsync();
+            SelectedLanguageIndex = ComboBoxLanguages.Select((language, index) => new { Language = language, Index = index })
+                .FirstOrDefault(x => x.Language.Locale == _userSettings.TranscriptionSettings?.Language?.Locale)?.Index ?? 0;
 
             if (!_isInitialized)
             {
-                ComboBoxLanguages = new ObservableCollection<string>(_appSettings.AzureSpeechServiceLanguageSelection);
 
-                _userSettings = await _userSettingService.LoadSettingsAsync();
-                SelectedLanguage = _userSettings.TranscriptionSettings.LanguageCode;
+                _userSettings = await _userSettingsService.LoadSettingsAsync();
+                SelectedLanguage = _userSettings.TranscriptionSettings.Language;
                 GenerateSingleFile = _userSettings.TranscriptionSettings.IsSigleFileExportMode;
 
                 _isInitialized = true;
@@ -126,11 +132,11 @@
 
                 _userSettings.TranscriptionSettings.IsSigleFileExportMode = GenerateSingleFile;
                 _userSettings.TranscriptionSettings.OpenFolderPath = OpenedFolderPath;
-                _userSettings.TranscriptionSettings.LanguageCode = SelectedLanguage;
-                
-                await _userSettingService.SaveSettingsAsync(_userSettings);
+                _userSettings.TranscriptionSettings.Language = SelectedLanguage;
 
-                if (string.IsNullOrEmpty(_appSettings.AzureSpeechServiceKey) || string.IsNullOrEmpty(_appSettings.AzureSpeechServiceLocation))
+                await _userSettingsService.SaveSettingsAsync(_userSettings);
+
+                if (string.IsNullOrEmpty(_appSettings.Key) || string.IsNullOrEmpty(_appSettings.Region))
                 {
                     _navigationWindow.Navigate(typeof(Views.Pages.SettingsPage));
                     return;
@@ -142,7 +148,7 @@
                     return;
                 }
 
-                if (string.IsNullOrEmpty(SelectedLanguage))
+                if (string.IsNullOrEmpty(SelectedLanguage.Locale))
                 {
                     Error = new ErrorViewModel("Please select a language.", InfoBarSeverity.Warning);
                     return;
@@ -176,11 +182,11 @@
 
                 if (GenerateSingleFile)
                 {
-                    await _transcribeFilesService.TranscribeAndSaveAsync(files, new SpeechTranscriptionExtentOptionsModel { LanguageCode = SelectedLanguage }, progress, _cts.Token);
+                    await _transcribeFilesService.TranscribeAndSaveAsync(files, new SpeechTranscriptionExtentOptionsModel { Locate = SelectedLanguage.Locale }, progress, _cts.Token);
                 }
                 else
                 {
-                    await _transcribeFilesService.TranscribeAndSaveAsync(files, new SpeechTranscriptionBaseOptionsModel { LanguageCode = SelectedLanguage }, progress, _cts.Token);
+                    await _transcribeFilesService.TranscribeAndSaveAsync(files, new SpeechTranscriptionBaseOptionsModel { Locate = SelectedLanguage.Locale }, progress, _cts.Token);
                 }
             }
             catch (OperationCanceledException ex)

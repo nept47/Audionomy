@@ -1,12 +1,13 @@
-﻿using Audionomy.BL.DataModels;
-using Audionomy.BL.Interfaces;
-using System.Text.Json;
-
-namespace Audionomy.BL.Services
+﻿namespace Audionomy.BL.Services
 {
-    public class UserSettingsService : ISettingsService<UserSettingsModel>
+    using Audionomy.BL.DataModels;
+    using Audionomy.BL.Interfaces;
+
+    using System.Text.Json;
+
+    public class UserSettingsService : IUserSettingsService
     {
-        private string _settingsFilePath;
+        private readonly string _settingsFilePath;
         private readonly string _settingsFileName = "userpreferences.json";
 
         public UserSettingsService()
