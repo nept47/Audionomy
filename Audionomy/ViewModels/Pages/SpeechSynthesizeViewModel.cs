@@ -10,8 +10,6 @@
     using NAudio.Wave;
     using System.Collections.ObjectModel;
     using System.IO;
-    using System.Media;
-    using System.Numerics;
     using Wpf.Ui;
     using Wpf.Ui.Controls;
 
@@ -47,6 +45,9 @@
 
         [ObservableProperty]
         private bool _generateTransriptionFile;
+
+        [ObservableProperty]
+        private bool _convertToAsteriskFormat;
 
         [ObservableProperty]
         private string _textToSynthesize;
@@ -90,6 +91,7 @@
 
             if (!_isInitialized)
             {
+                ConvertToAsteriskFormat = _userSettings.SpeechSynthesisSettings.ConvertToAsteriskFormat;
                 GenerateTransriptionFile = _userSettings.SpeechSynthesisSettings.GenerateTranscriptionFile;
 
                 _isInitialized = true;
@@ -153,6 +155,7 @@
 
                 _userSettings.SpeechSynthesisSettings.GenerateTranscriptionFile = GenerateTransriptionFile;
                 _userSettings.SpeechSynthesisSettings.Language = SelectedLanguage;
+                _userSettings.SpeechSynthesisSettings.ConvertToAsteriskFormat = ConvertToAsteriskFormat;
                 await _userSettingsService.SaveSettingsAsync(_userSettings);
 
                 var textToSynthesize = TextToSynthesize?.Trim();
@@ -202,13 +205,7 @@
 
                 _cts = new CancellationTokenSource();
 
-                SpeechSynhesisOptionsModel speechSynhesisOptions = new SpeechSynhesisOptionsModel()
-                {
-                    ExportTranscription = GenerateTransriptionFile,
-                    LanguageCode = SelectedLanguage.Locale,
-                    OutputFile = filePath,
-                    Text = textToSynthesize
-                };
+                var speechSynhesisOptions = new SpeechSynhesisOptionsModel(textToSynthesize, SelectedLanguage.Locale, filePath, GenerateTransriptionFile, ConvertToAsteriskFormat);
 
                 var progress = new Progress<SpeechSynthesisResultModel>(result =>
                 {
@@ -249,8 +246,6 @@
                 //ShowTranscribe = Visibility.Visible;
                 //ShowCancelTranscribe = Visibility.Hidden;
             }
-
-
         }
 
         [RelayCommand]
@@ -292,18 +287,13 @@
                     {
                         FilePath = Path.GetTempPath() + Guid.NewGuid() + ".wav",
                         Locale = SelectedLanguage.Locale,
-                        Text = textToSynthesize.Trim()
+                        Text = textToSynthesize.Trim(),
+                        ConvertToAsteriskFormat = ConvertToAsteriskFormat
                     };
 
                     _cts = new CancellationTokenSource();
 
-                    SpeechSynhesisOptionsModel speechSynhesisOptions = new SpeechSynhesisOptionsModel()
-                    {
-                        ExportTranscription = false,
-                        LanguageCode = SelectedLanguage.Locale,
-                        OutputFile = _tempSynthesizedFile.FilePath,
-                        Text = textToSynthesize
-                    };
+                    var speechSynhesisOptions = new SpeechSynhesisOptionsModel(textToSynthesize.Trim(), SelectedLanguage.Locale, _tempSynthesizedFile.FilePath, false, ConvertToAsteriskFormat);
 
                     var progress = new Progress<SpeechSynthesisResultModel>(result =>
                     {
@@ -372,7 +362,7 @@
 
         private bool SynthesizedFileExists()
         {
-            return _tempSynthesizedFile != null && _tempSynthesizedFile.Locale == SelectedLanguage?.Locale && _tempSynthesizedFile.Text == TextToSynthesize?.Trim() && File.Exists(_tempSynthesizedFile.FilePath);
+            return _tempSynthesizedFile != null && _tempSynthesizedFile.ConvertToAsteriskFormat == ConvertToAsteriskFormat && _tempSynthesizedFile.Locale == SelectedLanguage?.Locale && _tempSynthesizedFile.Text == TextToSynthesize?.Trim() && File.Exists(_tempSynthesizedFile.FilePath);
         }
 
 

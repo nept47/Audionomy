@@ -23,7 +23,9 @@
             Validate(settings, speechSynhesisOptions);
 
             var fullFilename = speechSynhesisOptions.OutputFile.GetFullFilenameWithoutExtenstion();
-            var tmpOutputFilename = string.Concat(fullFilename.AsSpan(0, fullFilename.Length - fullFilename.Length), "_tmp.wav");
+            var tmpOutputFilename = speechSynhesisOptions.ConvertToAsteriskFormat
+                ? string.Concat(fullFilename.AsSpan(0, fullFilename.Length - fullFilename.Length), "_tmp.wav")
+                : speechSynhesisOptions.OutputFile;
 
             progress?.Report(new SpeechSynthesisResultModel(speechSynhesisOptions.OutputFile, "Synthesizing.", 1, 1));
 
@@ -40,18 +42,21 @@
             }
             progress?.Report(new SpeechSynthesisResultModel(speechSynhesisOptions.OutputFile, "Converting to Asterisk Format.", 1, 1));
 
-            await AudioConverterUtility.ConvertToAsteriskFormatAsync(tmpOutputFilename, speechSynhesisOptions.OutputFile);
-
-            await ExportTransctiption(speechSynhesisOptions, progress);
-
-            try
+            if (speechSynhesisOptions.ConvertToAsteriskFormat)
             {
-                progress?.Report(new SpeechSynthesisResultModel(speechSynhesisOptions.OutputFile, "Removing temp file(s)...", 1, 1));
-                File.Delete(tmpOutputFilename);
-            }
-            catch (Exception)
-            {
-                throw;
+                await AudioConverterUtility.ConvertToAsteriskFormatAsync(tmpOutputFilename, speechSynhesisOptions.OutputFile);
+
+                await ExportTransctiption(speechSynhesisOptions, progress);
+
+                try
+                {
+                    progress?.Report(new SpeechSynthesisResultModel(speechSynhesisOptions.OutputFile, "Removing temp file(s)...", 1, 1));
+                    File.Delete(tmpOutputFilename);
+                }
+                catch (Exception)
+                {
+                    throw;
+                }
             }
 
             progress?.Report(new SpeechSynthesisResultModel(speechSynhesisOptions.OutputFile, "Completed.", 1, 1, true));
