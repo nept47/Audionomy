@@ -15,3 +15,7 @@
 - **Backend**: C# with .NET Framework 4.7.
 - **Cloud Services**: Azure Speech Service for audio transcription and synthesis.
 
+## Download
+The latest compiled version of **Audionomy** is available for download [here](https://github.com/nept47/Audionomy/releases/download/v0.1.4-alpha/Audionomy-v0.1.4-alpha.7z). After downloading, simply extract the files and run the executable (Audionomy.exe).
+
+
