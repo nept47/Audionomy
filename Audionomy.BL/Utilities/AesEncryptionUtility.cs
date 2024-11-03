@@ -1,8 +1,8 @@
-﻿using System.Security.Cryptography;
-using System.Text;
-
-namespace Audionomy.BL.Utilities
+﻿namespace Audionomy.BL.Utilities
 {
+    using System.Security.Cryptography;
+    using System.Text;
+
     public class AesEncryptionUtility
     {
         private readonly byte[] key;

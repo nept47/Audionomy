@@ -9,9 +9,9 @@
 
     public class SpeechSynthesisService : ISpeechSynthesisService
     {
-        private readonly ISettingsService<SecureSettingsModel> _settingsService;
+        private readonly IApplicationSettingsService _settingsService;
 
-        public SpeechSynthesisService(ISettingsService<SecureSettingsModel> settingsService)
+        public SpeechSynthesisService(IApplicationSettingsService settingsService)
         {
             _settingsService = settingsService;
         }
@@ -31,7 +31,7 @@
 
             using (var audioConfig = AudioConfig.FromWavFileOutput(tmpOutputFilename))
             {
-                var speechConfig = SpeechConfig.FromSubscription(settings.AzureSpeechServiceKey, settings.AzureSpeechServiceLocation);
+                var speechConfig = SpeechConfig.FromSubscription(settings.Key, settings.Region);
                 speechConfig.SpeechSynthesisLanguage = speechSynhesisOptions.LanguageCode;
 
                 // TODO: Investigate this speechConfig.SpeechSynthesisVoiceName = "en-US-AvaMultilingualNeural";
@@ -68,7 +68,7 @@
 
         }
 
-        private static void Validate(SecureSettingsModel settings, SpeechSynhesisOptionsModel speechSynhesisOptions)
+        private static void Validate(ApplicationSettingsModel settings, SpeechSynhesisOptionsModel speechSynhesisOptions)
         {
             if (string.IsNullOrEmpty(speechSynhesisOptions.LanguageCode))
             {
@@ -85,7 +85,7 @@
                 throw new ArgumentException("The text cannot be null or empty.", nameof(speechSynhesisOptions.Text));
             }
 
-            if (string.IsNullOrEmpty(settings.AzureSpeechServiceKey) || string.IsNullOrEmpty(settings.AzureSpeechServiceLocation))
+            if (string.IsNullOrEmpty(settings.Key) || string.IsNullOrEmpty(settings.Region))
             {
                 throw new ArgumentException("Missing Azure Key and Location/Region.");
             }

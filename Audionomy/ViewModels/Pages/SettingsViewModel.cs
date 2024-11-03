@@ -1,22 +1,16 @@
-﻿using Audionomy.BL.DataModels;
-using Audionomy.BL.Interfaces;
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Diagnostics.Metrics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Wpf.Ui.Appearance;
-using Wpf.Ui.Controls;
-
-namespace Audionomy.ViewModels.Pages
+﻿namespace Audionomy.ViewModels.Pages
 {
+    using Audionomy.BL.DataModels;
+    using Audionomy.BL.Interfaces;
+    using CommunityToolkit.Mvvm.ComponentModel;
+    using CommunityToolkit.Mvvm.Input;
+    using System.Collections.ObjectModel;
+    using Wpf.Ui.Controls;
+
     public partial class SettingsViewModel : ObservableObject, INavigationAware
     {
         private bool _isInitialized = false;
+        private List<VoiceLanguageModel> _allLanguages;
 
         [ObservableProperty]
         private string _appVersion = String.Empty;
@@ -28,19 +22,19 @@ namespace Audionomy.ViewModels.Pages
         private string _azureLocation = String.Empty;
 
         [ObservableProperty]
-        private ObservableCollection<string> _azureAvailableLanguages = [];
-
-        [ObservableProperty]
-        private ObservableCollection<string> _azureSelectedLanguages = [];
-
-        [ObservableProperty]
         private bool _isLanguageSelectionPanelVisible = false;
 
-        public ISettingsService<SecureSettingsModel> _appSettingsService { get; }
+        [ObservableProperty]
+        private ObservableCollection<VoiceLanguageModel> _availableLanguages = [];
 
-        public SettingsViewModel(ISettingsService<SecureSettingsModel> appSettingsService)
+        [ObservableProperty]
+        private ObservableCollection<VoiceLanguageModel> _activeLanguages = [];
+
+        private readonly IApplicationSettingsService _applicationSettingsService;
+
+        public SettingsViewModel(IApplicationSettingsService applicationSettingsService)
         {
-            _appSettingsService = appSettingsService;
+            _applicationSettingsService = applicationSettingsService;
         }
 
         public void OnNavigatedFrom() { }
@@ -53,13 +47,15 @@ namespace Audionomy.ViewModels.Pages
 
         private async Task InitializeViewModel()
         {
-            var settings = await _appSettingsService.LoadSettingsAsync();
-            //CurrentTheme = ApplicationThemeManager.GetAppTheme();
-            AppVersion = $"UiDesktopApp1 - {GetAssemblyVersion()}";
-            AzureSpeechServiceKey = settings.AzureSpeechServiceKey;
-            AzureLocation = settings.AzureSpeechServiceLocation;
-            AzureAvailableLanguages = new ObservableCollection<string>(settings.AzureSpeechServiceLanguageSupport);
-            AzureSelectedLanguages = new ObservableCollection<string>() { "en-gb", "en-us"};
+            var settings = await _applicationSettingsService.LoadSettingsAsync();
+            AzureSpeechServiceKey = settings.Key;
+            AzureLocation = settings.Region;
+            _allLanguages = settings.Languages;
+            
+            AvailableLanguages = new ObservableCollection<VoiceLanguageModel>(settings.Languages
+                .Where(x => settings.ActiveLanguages.All(y => y.Locale != x.Locale))
+                .ToList());
+            ActiveLanguages = new ObservableCollection<VoiceLanguageModel>(settings.ActiveLanguages);
             _isInitialized = true;
         }
 
@@ -70,19 +66,46 @@ namespace Audionomy.ViewModels.Pages
         }
 
         [RelayCommand]
-        private void OnSettingsSave()
+        private async Task OnSaveAzureCredentials()
         {
-            _appSettingsService.SaveSettingsAsync(new BL.DataModels.SecureSettingsModel()
+            await _applicationSettingsService.SaveAzureCredentialsAsync(AzureSpeechServiceKey, AzureLocation);
+            var settings = await _applicationSettingsService.LoadSettingsAsync();
+            AvailableLanguages = new ObservableCollection<VoiceLanguageModel>(settings.Languages);
+        }
+
+        public async Task AddActiveLanguage(VoiceLanguageModel language)
+        {
+            if (language != null && language.Description != null)
             {
-                AzureSpeechServiceKey = _azureSpeechServiceKey,
-                AzureSpeechServiceLocation = _azureLocation,
-            }).ConfigureAwait(false);
+                ActiveLanguages.Add(language);
+                AvailableLanguages.Remove(language);
+                ActiveLanguages = new ObservableCollection<VoiceLanguageModel>(ActiveLanguages.OrderBy(x => x.Description));
+                await _applicationSettingsService.SaveActiveLanguagesAsync(ActiveLanguages.ToList());
+            }
+        }
+
+        public async Task RemoveActiveLanguage(VoiceLanguageModel language)
+        {
+            if (language != null && language.Description != null)
+            {
+                ActiveLanguages.Remove(language);
+                AvailableLanguages.Add(language);
+                AvailableLanguages = new ObservableCollection<VoiceLanguageModel>(AvailableLanguages.OrderBy(x => x.Description));
+                await _applicationSettingsService.SaveActiveLanguagesAsync(ActiveLanguages.ToList());
+            }
         }
 
         [RelayCommand]
         private void OnToggleLanguageVisibility()
         {
             IsLanguageSelectionPanelVisible = !IsLanguageSelectionPanelVisible;
+        }
+        [RelayCommand]
+        private async Task OnClearActiveLanguages()
+        {
+            ActiveLanguages.Clear();
+            AvailableLanguages = new ObservableCollection<VoiceLanguageModel>(_allLanguages);
+            await _applicationSettingsService.SaveActiveLanguagesAsync(ActiveLanguages.ToList());
         }
     }
 }

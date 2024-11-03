@@ -7,18 +7,18 @@
 
     public class TranscribeFilesService : ITranscribeFilesService
     {
-        private readonly ISettingsService<SecureSettingsModel> _settingsService;
+        private readonly IApplicationSettingsService _settingsService;
 
-        public TranscribeFilesService(ISettingsService<SecureSettingsModel> settingsService)
+        public TranscribeFilesService(IApplicationSettingsService settingsService)
         {
             _settingsService = settingsService;
         }
 
         public async Task TranscribeAndSaveAsync(List<FileInfo> wavFiles, SpeechTranscriptionBaseOptionsModel speechTranscriptionOptions, IProgress<TranscriptionResultModel>? progress = null, CancellationToken cancellationToken = default)
         {
-            if (string.IsNullOrEmpty(speechTranscriptionOptions.LanguageCode))
+            if (string.IsNullOrEmpty(speechTranscriptionOptions.Locate))
             {
-                throw new ArgumentException("Input language cannot be null or empty.", nameof(speechTranscriptionOptions.LanguageCode));
+                throw new ArgumentException("Input language cannot be null or empty.", nameof(speechTranscriptionOptions.Locate));
             }
 
             wavFiles = wavFiles.FindAll(x => x.Extension.Equals(".wav", StringComparison.CurrentCultureIgnoreCase));
@@ -29,8 +29,8 @@
             }
 
             var settings = await _settingsService.LoadSettingsAsync();
-            var speechConfig = SpeechConfig.FromSubscription(settings.AzureSpeechServiceKey, settings.AzureSpeechServiceLocation);
-            speechConfig.SpeechRecognitionLanguage = speechTranscriptionOptions.LanguageCode;
+            var speechConfig = SpeechConfig.FromSubscription(settings.Key, settings.Region);
+            speechConfig.SpeechRecognitionLanguage = speechTranscriptionOptions.Locate;
 
             var totalFileCount = wavFiles.Count;
             var transcribedFileCount = 0;
@@ -68,9 +68,9 @@
 
         public async Task TranscribeAndSaveAsync(List<FileInfo> wavFiles, SpeechTranscriptionExtentOptionsModel speechTranscriptionOptions, IProgress<TranscriptionResultModel>? progress = null, CancellationToken cancellationToken = default)
         {
-            if (string.IsNullOrEmpty(speechTranscriptionOptions.LanguageCode))
+            if (string.IsNullOrEmpty(speechTranscriptionOptions.Locate))
             {
-                throw new ArgumentException("Input language cannot be null or empty.", nameof(speechTranscriptionOptions.LanguageCode));
+                throw new ArgumentException("Input language cannot be null or empty.", nameof(speechTranscriptionOptions.Locate));
             }
 
             wavFiles = wavFiles.FindAll(x => x.Extension.Equals(".wav", StringComparison.CurrentCultureIgnoreCase));
@@ -96,8 +96,8 @@
             var filePath = Path.Combine(path, speechTranscriptionOptions.OutputFilename);
 
             var settings = await _settingsService.LoadSettingsAsync();
-            var speechConfig = SpeechConfig.FromSubscription(settings.AzureSpeechServiceKey, settings.AzureSpeechServiceLocation);
-            speechConfig.SpeechRecognitionLanguage = speechTranscriptionOptions.LanguageCode;
+            var speechConfig = SpeechConfig.FromSubscription(settings.Key, settings.Region);
+            speechConfig.SpeechRecognitionLanguage = speechTranscriptionOptions.Locate;
             var totalFileCount = wavFiles.Count;
             var transcribedFileCount = 0;
 

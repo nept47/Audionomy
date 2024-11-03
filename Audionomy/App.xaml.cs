@@ -59,8 +59,8 @@ namespace Audionomy
                 services.AddSingleton<SpeechSynthesizePage>();
                 services.AddSingleton<SpeechSynthesizeViewModel>();
 
-                services.AddSingleton<ISettingsService<SecureSettingsModel>, SecureSettingsService>();
-                services.AddSingleton<ISettingsService<UserSettingsModel>, UserSettingsService>();
+                services.AddSingleton<IApplicationSettingsService, ApplicationSettingsService>();
+                services.AddSingleton<IUserSettingsService, UserSettingsService>();
                 services.AddSingleton<ITranscribeFilesService, TranscribeFilesService>();
                 services.AddSingleton<ISpeechSynthesisService, SpeechSynthesisService>();
 

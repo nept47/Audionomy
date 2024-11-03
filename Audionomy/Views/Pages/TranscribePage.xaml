@@ -49,10 +49,10 @@
                 <ui:TextBlock FontSize="{DynamicResourceExtension ControlContentThemeFontSize}"  VerticalAlignment="Center" Text="Language" 
                               Padding="11,5,11,6"/>
             </Border>
-            <ComboBox  HorizontalAlignment="Left" Grid.Column="1" Margin="16,0,0,0" MinWidth="100px"
+            <ComboBox  HorizontalAlignment="Left" Grid.Column="1" Margin="16,0,0,0" MinWidth="300px"
                        SelectedValue="{Binding ViewModel.SelectedLanguage, Mode=TwoWay}"
-                       ItemsSource="{Binding ViewModel.ComboBoxLanguages, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:TranscribePage}, Mode=OneWay}"
-                       >
+                       SelectedIndex="{Binding ViewModel.SelectedLanguageIndex, Mode=TwoWay}"                      
+                       ItemsSource="{Binding ViewModel.ComboBoxLanguages, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:TranscribePage}, Mode=OneWay}" >
                 <ComboBox.ItemTemplate>
                     <DataTemplate>
                         <TextBlock Text="{Binding}" />
@@ -65,7 +65,6 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="100" />
                 <ColumnDefinition Width="*" />
-
             </Grid.ColumnDefinitions>
             <Border Grid.Column="0">
                 <ui:TextBlock FontSize="{DynamicResourceExtension ControlContentThemeFontSize}"  VerticalAlignment="Center" Text="Single file" 

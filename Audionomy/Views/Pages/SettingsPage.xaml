@@ -3,81 +3,151 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:local="clr-namespace:Audionomy.Views.Pages" 
       xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml" mc:Ignorable="d" Title="SettingsPage"
       xmlns:helpers="clr-namespace:Audionomy.Helpers"
-
+      d:DesignHeight="450" d:DesignWidth="800"
+      xmlns:models="clr-namespace:Audionomy.BL.DataModels;assembly=Audionomy.BL"
       d:DataContext="{d:DesignInstance local:SettingsPage, IsDesignTimeCreatable=False}"
       ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
       ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
       Foreground="{DynamicResource TextFillColorPrimaryBrush}">
     <Page.Resources>
         <helpers:CollectionToCommaSeparatedStringConverter x:Key="CollectionToCommaSeparatedStringConverter" />
+        <!-- Overriding the PrimaryBrush resource to use a different color -->
+        <SolidColorBrush x:Key="TabViewItemHeaderBackgroundSelected" Color="{StaticResource CardBackgroundFillColorDefault}" />
     </Page.Resources>
 
-    <Grid>
+    <TabControl Margin="0,0,0,0">
+        <TabItem IsSelected="True">
+            <TabItem.Header>
+                <StackPanel Orientation="Horizontal">
+                    <ui:SymbolIcon Margin="0,0,6,0" Symbol="Cloud16" />
+                    <TextBlock Text="Azure Credentials" />
+                </StackPanel>
+            </TabItem.Header>
+            <Grid VerticalAlignment="Top" >
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Border VerticalAlignment="Top" Grid.Row="0" Padding="16"  Background="{ui:ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ui:ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1,1,1,0" CornerRadius="0,0,8,8" HorizontalAlignment="Stretch">
+                    <StackPanel>
+                        <StackPanel Margin="0,0,0,0">
+                            <Label Content="Key" Padding="0,0,0,5" Target="{Binding ElementName=TxtAzureSpeechServiceKey, UpdateSourceTrigger=PropertyChanged}" />
+                            <ui:PasswordBox Password="{Binding ViewModel.AzureSpeechServiceKey, Mode=TwoWay}" />
+                        </StackPanel>
+                        <StackPanel  Margin="0,10,0,0">
+                            <Label Content="Location/Region" Padding="0,0,0,5" />
+                            <ui:TextBox Text="{Binding ViewModel.AzureLocation, Mode=TwoWay}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+                <ui:Button Grid.Row="1" HorizontalAlignment="Right" Width="150" Margin="0,10,0,0" Command="{Binding ViewModel.SaveAzureCredentialsCommand, Mode=OneWay}" Content="Save" Icon="Fluent24" />
+            </Grid>
+        </TabItem>
+        <TabItem Loaded="TabItem_Loaded" >
+            <TabItem.Header>
+                <StackPanel Orientation="Horizontal">
+                    <ui:SymbolIcon Margin="0,0,6,0" Symbol="LocalLanguage16" />
+                    <TextBlock Text="Language Selection" />
+                </StackPanel>
+            </TabItem.Header>
+            <Border Grid.Row="0" Padding="16" Background="{ui:ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ui:ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1,1,1,0" CornerRadius="0,0,8,8"
+                        HorizontalAlignment="Stretch" VerticalAlignment="Stretch" >
+
+                <Grid VerticalAlignment="Top">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition Width="10" />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <StackPanel Grid.Column="0" Grid.Row="0" Orientation="Horizontal" >
+                        <Label Content="Available: " VerticalAlignment="Center" Target="{Binding ElementName=TxtAzureSpeechServiceKey, UpdateSourceTrigger=PropertyChanged}" />
+                        <Label VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Content="{Binding ViewModel.AvailableLanguages.Count, Mode=OneWay}" Margin="0,0,80,0" />
+                    </StackPanel>
+                    <Border  Grid.Column="0" Grid.Row="1"  Margin="0,10,0,0" Background="{ui:ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ui:ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1,1,1,0" CornerRadius="8" >
+                        <ui:ListView MouseDoubleClick="AddLanguage_Click" MaxHeight="250"  d:ItemsSource="{d:SampleData ItemCount=2}"  ItemsSource="{Binding ViewModel.AvailableLanguages, Mode=OneWay}" SelectionMode="Single">
+                            <ui:ListView.ItemTemplate>
+                                <DataTemplate DataType="{x:Type models:VoiceLanguageModel}">
+                                    <TextBlock Margin="7,0,0,0" Text="{Binding Description, Mode=OneWay}" />
+                                </DataTemplate>
+                            </ui:ListView.ItemTemplate>
+                        </ui:ListView>
+                    </Border>
+                    <DockPanel Grid.Column="2" Grid.Row="0" >
+                        <Label Content="Selected: " VerticalAlignment="Center" Target="{Binding ElementName=TxtAzureSpeechServiceKey, UpdateSourceTrigger=PropertyChanged}" />
+                        <Label VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Content="{Binding ViewModel.ActiveLanguages.Count, Mode=OneWay}" />
+                        <ui:Button HorizontalAlignment="Right"  Width="100" Command="{Binding ViewModel.ClearActiveLanguagesCommand}" Content="Clear" Icon="{ui:SymbolIcon Symbol=Delete16}" />
+                    </DockPanel>
+                    <Border  Grid.Column="2" Grid.Row="1"  Margin="0,10,0,0" Background="{ui:ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ui:ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1,1,1,0" CornerRadius="8" >
+                        <ui:ListView MouseDoubleClick="RevoveLanguage_Click" x:Name="languageListViesw" MaxHeight="250" d:ItemsSource="{d:SampleData ItemCount=2}" ItemsSource="{Binding ViewModel.ActiveLanguages, Mode=OneWay}"  SelectionMode="Single">
+                            <ui:ListView.ItemTemplate>
+                                <DataTemplate DataType="{x:Type models:VoiceLanguageModel}">
+                                    <TextBlock Margin="7,0,0,0" Text="{Binding Description, Mode=OneWay}" />
+                                </DataTemplate>
+                            </ui:ListView.ItemTemplate>
+                        </ui:ListView>
+                    </Border>
+                </Grid>
+            </Border>
+        </TabItem>
+    </TabControl>
+
+
+    <!--<Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
+            <RowDefinition Height="*" />            
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-
-        <ui:TextBlock Grid.Row="0" Margin="0,0,0,10" FontTypography="BodyStrong" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="Azure Speech service" />
+        <StackPanel  Grid.Row="0">
+            <ui:TextBlock FontTypography="BodyStrong" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="Azure Speech service" />
+            <Border Margin="0,5,0,0" Padding="16" Background="{ui:ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ui:ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1,1,1,0" CornerRadius="8,8,0,0" HorizontalAlignment="Stretch">
+                <StackPanel>
+                    <StackPanel Margin="0,0,0,0">
+                        <Label Content="Key" Padding="0,0,0,5" Target="{Binding ElementName=TxtAzureSpeechServiceKey, UpdateSourceTrigger=PropertyChanged}" />
+                        <ui:PasswordBox Password="{Binding ViewModel.AzureSpeechServiceKey, Mode=TwoWay}" />
+                    </StackPanel>
+                    <StackPanel  Margin="0,10,0,0">
+                        <Label Content="Location/Region" Padding="0,0,0,5" />
+                        <ui:TextBox Text="{Binding ViewModel.AzureLocation, Mode=TwoWay}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+        <StackPanel Grid.Row="1" Margin="0,20,0,0">
+            <ui:TextBlock FontTypography="BodyStrong" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Text="Languages" Margin="0,0,10,0" />
+            <Border Margin="0,5,0,0" Padding="16" Background="{ui:ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ui:ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1,1,1,0" CornerRadius="8,8,0,0" HorizontalAlignment="Stretch">
+                <StackPanel>
+                    <DockPanel VerticalAlignment="Center" >
+                        <Label Content="Available: " VerticalAlignment="Center" Target="{Binding ElementName=TxtAzureSpeechServiceKey, UpdateSourceTrigger=PropertyChanged}" />
+                        <Label VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Content="{Binding ViewModel.AvailableLanguagesCount, Mode=OneWay}" Margin="0,0,80,0" />
+                        <Label Content="Selected: " VerticalAlignment="Center" Target="{Binding ElementName=TxtAzureSpeechServiceKey, UpdateSourceTrigger=PropertyChanged}" />
+                        <Label VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Content="{Binding ViewModel.SelectedLanguagesCount, Mode=OneWay}" />
+                        <ui:Button HorizontalAlignment="Right"  Width="150" Click="ClearSelectedLanguages_Click" Content="Clear selection" Icon="Fluent24" />
+                    </DockPanel>
+                    <Border Margin="0,10,0,0" Background="{ui:ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ui:ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1,1,1,0" CornerRadius="8,8,0,0" HorizontalAlignment="Stretch">
+                        <ui:ListView x:Name="languageListView"
+                                     MaxHeight="200"
+                                     d:ItemsSource="{d:SampleData ItemCount=2}"
+                                     ItemsSource="{Binding ViewModel.AvailableLanguages, Mode=OneWay}"
+                                     SelectionChanged="LanguageListView_SelectionChanged"
+                                     SelectionMode="Multiple">
+                            <ui:ListView.ItemTemplate>
+                                <DataTemplate DataType="{x:Type models:VoiceLanguageModel}">
+                                    <TextBlock Margin="7,0,0,0" Text="{Binding Description, Mode=OneWay}" />
+                                </DataTemplate>
+                            </ui:ListView.ItemTemplate>
+                        </ui:ListView>
+                    </Border>                    
+                </StackPanel>
+            </Border>            
+        </StackPanel>
        
-        <Border Grid.Row="1" Padding="16" Background="{ui:ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ui:ThemeResource CardStrokeColorDefaultBrush}"
-                BorderThickness="1,1,1,0" CornerRadius="8,8,0,0" HorizontalAlignment="Stretch">
-            <StackPanel>
-                <StackPanel Margin="0,0,0,0">
-                    <Label Content="Key" Padding="0,0,0,5" Target="{Binding ElementName=TxtAzureSpeechServiceKey, UpdateSourceTrigger=PropertyChanged}" />
-                    <ui:PasswordBox Name="TxtAzureSpeechServiceKey" Password="{Binding ViewModel.AzureSpeechServiceKey, Mode=TwoWay}" />
-                </StackPanel>
-                <StackPanel  Margin="0,10,0,0">
-                    <Label Content="Location/Region" Padding="0,0,0,5" />
-                    <ui:TextBox Text="{Binding ViewModel.AzureLocation, Mode=TwoWay}" />
-                </StackPanel>
-                <!--<StackPanel  Margin="0,10,0,0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <ui:Button Grid.Column="0" Command="{Binding ViewModel.ToggleLanguageVisibilityCommand}" Content="Edit Languages" />
-                    <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center" >
-                        <ui:TextBlock Text="{Binding ViewModel.AzureSelectedLanguages, Converter={StaticResource CollectionToCommaSeparatedStringConverter}}" />
-                    </StackPanel>
-                    <StackPanel Background="LightGray" Height="100">
-                        <StackPanel.Style>
-                            <Style TargetType="StackPanel">
-                                <Setter Property="Visibility" Value="Collapsed"/>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding ViewModel.IsLanguageSelectionPanelVisible}" Value="True">
-                                        <Setter Property="Visibility" Value="Visible"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </StackPanel.Style>
-                        <TextBlock Text="This is a toggleable panel." VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                    </StackPanel>
-                    -->
-                <!--<ui:ListView
-                        MaxHeight="200"
-                        d:ItemsSource="{d:SampleData ItemCount=2}"
-                        ItemsSource="{Binding ViewModel.AzureAvailableLanguages, Mode=TwoWay}"
-                        SelectedIndex="2"
-                        SelectionMode="Multiple">
-                        -->
-                <!--<ui:ListView.ItemTemplate>
-                            <DataTemplate DataType="{x:Type models:Person}">
-                                <TextBlock Margin="8,4" Text="{Binding Name, Mode=OneWay}" />
-                            </DataTemplate>
-                        </ui:ListView.ItemTemplate>-->
-                <!--
-                    </ui:ListView>-->
-                <!--
-
-                </StackPanel>-->
-
-            </StackPanel>
-        </Border>
-
-
-
-        <ui:Button Grid.Row="3" HorizontalAlignment="Right" Width="150" Command="{Binding ViewModel.SettingsSaveCommand, Mode=OneWay}" Content="Save" Icon="Fluent24" />
-
-    </Grid>
-
-    <!--</Grid>-->
+    </Grid>-->
 </Page>
