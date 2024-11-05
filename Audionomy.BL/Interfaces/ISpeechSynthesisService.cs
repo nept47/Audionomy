@@ -1,10 +1,10 @@
-﻿using Audionomy.BL.DataModels;
-
-namespace Audionomy.BL.Interfaces
+﻿namespace Audionomy.BL.Interfaces
 {
+    using Audionomy.BL.DataModels;
+
     public interface ISpeechSynthesisService
     {
-        Task ExportTransctiption(SpeechSynhesisOptionsModel speechSynhesisOptions, IProgress<SpeechSynthesisResultModel>? progress);
-        Task GenerateFile(SpeechSynhesisOptionsModel speechSynhesisOptions, IProgress<SpeechSynthesisResultModel>? progress = null, CancellationToken cancellationToken = default);
+        Task ExportTransctiption(SpeechSynhesisOptionsModel options, IProgress<SpeechSynthesisResultModel>? progress);
+        Task GenerateFile(SpeechSynhesisOptionsModel options, IProgress<SpeechSynthesisResultModel>? progress = null, CancellationToken cancellationToken = default);
     }
 }
