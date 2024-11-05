@@ -20,5 +20,10 @@
             VoiceType = voiceType;
             RolePlayList = rolePlayList ?? new List<string>();
         }
+
+        public override string ToString()
+        {
+            return $"{DisplayName} ({Gender})";
+        }
     }
 }

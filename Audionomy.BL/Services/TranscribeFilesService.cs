@@ -14,11 +14,11 @@
             _settingsService = settingsService;
         }
 
-        public async Task TranscribeAndSaveAsync(List<FileInfo> wavFiles, SpeechTranscriptionBaseOptionsModel speechTranscriptionOptions, IProgress<TranscriptionResultModel>? progress = null, CancellationToken cancellationToken = default)
+        public async Task TranscribeAndSaveAsync(List<FileInfo> wavFiles, SpeechTranscriptionBaseOptionsModel options, IProgress<TranscriptionResultModel>? progress = null, CancellationToken cancellationToken = default)
         {
-            if (string.IsNullOrEmpty(speechTranscriptionOptions.Locate))
+            if (string.IsNullOrEmpty(options.Locate))
             {
-                throw new ArgumentException("Input language cannot be null or empty.", nameof(speechTranscriptionOptions.Locate));
+                throw new ArgumentException("Input language cannot be null or empty.", nameof(options.Locate));
             }
 
             wavFiles = wavFiles.FindAll(x => x.Extension.Equals(".wav", StringComparison.CurrentCultureIgnoreCase));
@@ -30,7 +30,7 @@
 
             var settings = await _settingsService.LoadSettingsAsync();
             var speechConfig = SpeechConfig.FromSubscription(settings.Key, settings.Region);
-            speechConfig.SpeechRecognitionLanguage = speechTranscriptionOptions.Locate;
+            speechConfig.SpeechRecognitionLanguage = options.Locate;
 
             var totalFileCount = wavFiles.Count;
             var transcribedFileCount = 0;
@@ -56,7 +56,7 @@
 
                 var text = FileToText(speechRecognitionResult);
 
-                var outputPath = speechTranscriptionOptions.OutputFolderPath ?? file.DirectoryName ?? throw new ArgumentException($"Output directory is invalid for file: {file.FullName}");
+                var outputPath = options.OutputFolderPath ?? file.DirectoryName ?? throw new ArgumentException($"Output directory is invalid for file: {file.FullName}");
                 var filePath = Path.Combine(outputPath, $"{Path.GetFileNameWithoutExtension(file.Name)}.txt");
 
                 await using var outputFile = new StreamWriter(filePath, false);
@@ -66,11 +66,11 @@
             progress?.Report(new TranscriptionResultModel("Completed", totalFileCount, transcribedFileCount, true));
         }
 
-        public async Task TranscribeAndSaveAsync(List<FileInfo> wavFiles, SpeechTranscriptionExtentOptionsModel speechTranscriptionOptions, IProgress<TranscriptionResultModel>? progress = null, CancellationToken cancellationToken = default)
+        public async Task TranscribeAndSaveAsync(List<FileInfo> wavFiles, SpeechTranscriptionExtentOptionsModel option, IProgress<TranscriptionResultModel>? progress = null, CancellationToken cancellationToken = default)
         {
-            if (string.IsNullOrEmpty(speechTranscriptionOptions.Locate))
+            if (string.IsNullOrEmpty(option.Locate))
             {
-                throw new ArgumentException("Input language cannot be null or empty.", nameof(speechTranscriptionOptions.Locate));
+                throw new ArgumentException("Input language cannot be null or empty.", nameof(option.Locate));
             }
 
             wavFiles = wavFiles.FindAll(x => x.Extension.Equals(".wav", StringComparison.CurrentCultureIgnoreCase));
@@ -80,24 +80,24 @@
                 throw new ArgumentException("Input file list cannot be null or empty.", nameof(wavFiles));
             }
 
-            if (string.IsNullOrEmpty(speechTranscriptionOptions.OutputFolderPath) && !AreAllFilesInSameDirectory(wavFiles))
+            if (string.IsNullOrEmpty(option.OutputFolderPath) && !AreAllFilesInSameDirectory(wavFiles))
             {
-                throw new ArgumentException($"Since not all files are in the same directory, {nameof(speechTranscriptionOptions.OutputFolderPath)} cannot be empty.");
+                throw new ArgumentException($"Since not all files are in the same directory, {nameof(option.OutputFolderPath)} cannot be empty.");
             }
 
-            var path = speechTranscriptionOptions.OutputFolderPath ?? wavFiles[0].DirectoryName ?? throw new ArgumentException("Output directory could not be determined.");
+            var path = option.OutputFolderPath ?? wavFiles[0].DirectoryName ?? throw new ArgumentException("Output directory could not be determined.");
 
-            speechTranscriptionOptions.OutputFilename = string.IsNullOrEmpty(speechTranscriptionOptions.OutputFilename)
+            option.OutputFilename = string.IsNullOrEmpty(option.OutputFilename)
                 ? $"Transcription_{DateTime.Now:yyyyMMddHHmmssfff}.txt"
-                : speechTranscriptionOptions.OutputFilename.EndsWith(".txt", StringComparison.OrdinalIgnoreCase)
-                ? speechTranscriptionOptions.OutputFilename
-                : $"{speechTranscriptionOptions.OutputFilename}.txt";
+                : option.OutputFilename.EndsWith(".txt", StringComparison.OrdinalIgnoreCase)
+                ? option.OutputFilename
+                : $"{option.OutputFilename}.txt";
 
-            var filePath = Path.Combine(path, speechTranscriptionOptions.OutputFilename);
+            var filePath = Path.Combine(path, option.OutputFilename);
 
             var settings = await _settingsService.LoadSettingsAsync();
             var speechConfig = SpeechConfig.FromSubscription(settings.Key, settings.Region);
-            speechConfig.SpeechRecognitionLanguage = speechTranscriptionOptions.Locate;
+            speechConfig.SpeechRecognitionLanguage = option.Locate;
             var totalFileCount = wavFiles.Count;
             var transcribedFileCount = 0;
 

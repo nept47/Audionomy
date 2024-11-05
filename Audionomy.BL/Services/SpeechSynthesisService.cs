@@ -16,63 +16,56 @@
             _settingsService = settingsService;
         }
 
-        public async Task GenerateFile(SpeechSynhesisOptionsModel speechSynhesisOptions, IProgress<SpeechSynthesisResultModel>? progress = null, CancellationToken cancellationToken = default)
+        public async Task GenerateFile(SpeechSynhesisOptionsModel options, IProgress<SpeechSynthesisResultModel>? progress = null, CancellationToken cancellationToken = default)
         {
             var settings = await _settingsService.LoadSettingsAsync();
+            ValidateOptionsAndSettings(settings, options);
 
-            Validate(settings, speechSynhesisOptions);
+            var tmpOutputFilename = options.ConvertToAsteriskFormat
+                ? $"{options.OutputFile.GetFullFilenameWithoutExtenstion()}_tmp.wav"
+                : options.OutputFile;
 
-            var fullFilename = speechSynhesisOptions.OutputFile.GetFullFilenameWithoutExtenstion();
-            var tmpOutputFilename = speechSynhesisOptions.ConvertToAsteriskFormat
-                ? string.Concat(fullFilename.AsSpan(0, fullFilename.Length - fullFilename.Length), "_tmp.wav")
-                : speechSynhesisOptions.OutputFile;
+            progress?.Report(new SpeechSynthesisResultModel(options.OutputFile, "Synthesizing.", 1, 1));
 
-            progress?.Report(new SpeechSynthesisResultModel(speechSynhesisOptions.OutputFile, "Synthesizing.", 1, 1));
-
-            using (var audioConfig = AudioConfig.FromWavFileOutput(tmpOutputFilename))
+            try
             {
-                var speechConfig = SpeechConfig.FromSubscription(settings.Key, settings.Region);
-                speechConfig.SpeechSynthesisLanguage = speechSynhesisOptions.LanguageCode;
-
-                // TODO: Investigate this speechConfig.SpeechSynthesisVoiceName = "en-US-AvaMultilingualNeural";
-                using (var speechSynthesizer = new SpeechSynthesizer(speechConfig, audioConfig))
+                using (var audioConfig = AudioConfig.FromWavFileOutput(tmpOutputFilename))
                 {
-                    await speechSynthesizer.SpeakTextAsync(speechSynhesisOptions.Text);
+                    var speechConfig = CreateSpeechConfig(options, settings);
+                    using var speechSynthesizer = new SpeechSynthesizer(speechConfig, audioConfig);
+                    await speechSynthesizer.SpeakTextAsync(options.Text);
                 }
-            }
-            progress?.Report(new SpeechSynthesisResultModel(speechSynhesisOptions.OutputFile, "Converting to Asterisk Format.", 1, 1));
 
-            if (speechSynhesisOptions.ConvertToAsteriskFormat)
+                progress?.Report(new SpeechSynthesisResultModel(options.OutputFile, "Converting to Asterisk Format.", 1, 1));
+
+                if (options.ConvertToAsteriskFormat)
+                {
+                    await AudioConverterUtility.ConvertToAsteriskFormatAsync(tmpOutputFilename, options.OutputFile);
+                    TryDeleteTempFile(options, progress, tmpOutputFilename);
+                }
+
+                if (options.ExportTranscription)
+                {
+                    await ExportTransctiption(options, progress);
+                }
+
+                progress?.Report(new SpeechSynthesisResultModel(options.OutputFile, "Completed.", 1, 1, true));
+            }
+            catch (Exception ex)
             {
-                await AudioConverterUtility.ConvertToAsteriskFormatAsync(tmpOutputFilename, speechSynhesisOptions.OutputFile);
-
-                await ExportTransctiption(speechSynhesisOptions, progress);
-
-                try
-                {
-                    progress?.Report(new SpeechSynthesisResultModel(speechSynhesisOptions.OutputFile, "Removing temp file(s)...", 1, 1));
-                    File.Delete(tmpOutputFilename);
-                }
-                catch (Exception)
-                {
-                    throw;
-                }
+                progress?.Report(new SpeechSynthesisResultModel(options.OutputFile, $"Error: {ex.Message}", 1, 1, true));
+                // TODO: Add logging
             }
-
-            progress?.Report(new SpeechSynthesisResultModel(speechSynhesisOptions.OutputFile, "Completed.", 1, 1, true));
         }
 
-        public async Task ExportTransctiption(SpeechSynhesisOptionsModel speechSynhesisOptions, IProgress<SpeechSynthesisResultModel>? progress)
+        public async Task ExportTransctiption(SpeechSynhesisOptionsModel options, IProgress<SpeechSynthesisResultModel>? progress)
         {
-            if (speechSynhesisOptions.ExportTranscription)
-            {
-                progress?.Report(new SpeechSynthesisResultModel(speechSynhesisOptions.OutputFile, "Creating Transcription File.", 1, 1));
-                await using var outputFile = new StreamWriter(speechSynhesisOptions.OutputFile.GetFullFilenameWithoutExtenstion() + ".txt", false);
-                await outputFile.WriteLineAsync(speechSynhesisOptions.Text);
-            }
+            progress?.Report(new SpeechSynthesisResultModel(options.OutputFile, "Creating Transcription File.", 1, 1));
+            await using var outputFile = new StreamWriter($"{options.OutputFile.GetFullFilenameWithoutExtenstion()}.txt", false);
+            await outputFile.WriteLineAsync(options.Text);
         }
 
-        private static void Validate(ApplicationSettingsModel settings, SpeechSynhesisOptionsModel speechSynhesisOptions)
+        private static void ValidateOptionsAndSettings(ApplicationSettingsModel settings, SpeechSynhesisOptionsModel speechSynhesisOptions)
         {
             if (string.IsNullOrEmpty(speechSynhesisOptions.LanguageCode))
             {
@@ -94,5 +87,32 @@
                 throw new ArgumentException("Missing Azure Key and Location/Region.");
             }
         }
+
+        private static SpeechConfig CreateSpeechConfig(SpeechSynhesisOptionsModel options, ApplicationSettingsModel settings)
+        {
+            var speechConfig = SpeechConfig.FromSubscription(settings.Key, settings.Region);
+            speechConfig.SpeechSynthesisLanguage = options.LanguageCode;
+
+            if (options.LanguageStyle != null)
+            {
+                speechConfig.SpeechSynthesisVoiceName = options.LanguageStyle;
+            }
+
+            return speechConfig;
+        }
+
+        private static void TryDeleteTempFile(SpeechSynhesisOptionsModel options, IProgress<SpeechSynthesisResultModel>? progress, string tmpOutputFilename)
+        {
+            try
+            {
+                progress?.Report(new SpeechSynthesisResultModel(options.OutputFile, "Removing temp file(s)...", 1, 1));
+                File.Delete(tmpOutputFilename);
+            }
+            catch (Exception)
+            {
+                // TODO: Add logging
+            }
+        }
+
     }
 }
