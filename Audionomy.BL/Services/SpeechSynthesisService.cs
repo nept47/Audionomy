@@ -33,6 +33,10 @@
             {
                 var speechConfig = SpeechConfig.FromSubscription(settings.Key, settings.Region);
                 speechConfig.SpeechSynthesisLanguage = speechSynhesisOptions.LanguageCode;
+                if (speechSynhesisOptions.LanguageStyle != null)
+                {
+                    speechConfig.SpeechSynthesisVoiceName = speechSynhesisOptions.LanguageStyle;
+                }
 
                 // TODO: Investigate this speechConfig.SpeechSynthesisVoiceName = "en-US-AvaMultilingualNeural";
                 using (var speechSynthesizer = new SpeechSynthesizer(speechConfig, audioConfig))

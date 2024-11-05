@@ -1,6 +1,7 @@
 ﻿namespace Audionomy.Views.Pages
 {
     using Audionomy.ViewModels.Pages;
+    using System.Windows.Controls;
     using Wpf.Ui.Controls;
 
     /// <summary>
@@ -17,5 +18,10 @@
         }
 
         public SpeechSynthesizeViewModel ViewModel { get; }
+
+        private void LanguageComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            ViewModel.SelectedLanguageStyleIndex = 0;
+        }
     }
 }

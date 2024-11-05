@@ -10,6 +10,7 @@
     using NAudio.Wave;
     using System.Collections.ObjectModel;
     using System.IO;
+    using System.Windows.Automation;
     using Wpf.Ui;
     using Wpf.Ui.Controls;
 
@@ -41,6 +42,9 @@
         private VoiceLanguageModel? _selectedLanguage = new VoiceLanguageModel();
 
         [ObservableProperty]
+        private VoiceLanguageStyleModel? _selectedLanguageStyle = new VoiceLanguageStyleModel();
+
+        [ObservableProperty]
         private string _language = String.Empty;
 
         [ObservableProperty]
@@ -60,6 +64,9 @@
 
         [ObservableProperty]
         private int _selectedLanguageIndex = 0;
+
+        [ObservableProperty]
+        private int _selectedLanguageStyleIndex = 0;
 
         public SpeechSynthesizeViewModel(
            IUserSettingsService userSettingsService,
@@ -153,10 +160,7 @@
             {
                 SynthesisInfoBar = new InfoMessageModel();
 
-                _userSettings.SpeechSynthesisSettings.GenerateTranscriptionFile = GenerateTransriptionFile;
-                _userSettings.SpeechSynthesisSettings.Language = SelectedLanguage;
-                _userSettings.SpeechSynthesisSettings.ConvertToAsteriskFormat = ConvertToAsteriskFormat;
-                await _userSettingsService.SaveSettingsAsync(_userSettings);
+                await SaveUserSelectionsAsync();
 
                 var textToSynthesize = TextToSynthesize?.Trim();
 
@@ -205,7 +209,7 @@
 
                 _cts = new CancellationTokenSource();
 
-                var speechSynhesisOptions = new SpeechSynhesisOptionsModel(textToSynthesize, SelectedLanguage.Locale, filePath, GenerateTransriptionFile, ConvertToAsteriskFormat);
+                var speechSynhesisOptions = new SpeechSynhesisOptionsModel(textToSynthesize, SelectedLanguage.Locale, filePath, GenerateTransriptionFile, ConvertToAsteriskFormat, SelectedLanguageStyle?.ShortName);
 
                 var progress = new Progress<SpeechSynthesisResultModel>(result =>
                 {
@@ -256,9 +260,7 @@
             {
                 SynthesisInfoBar = new InfoMessageModel();
 
-                _userSettings.SpeechSynthesisSettings.GenerateTranscriptionFile = GenerateTransriptionFile;
-                _userSettings.SpeechSynthesisSettings.Language = SelectedLanguage;
-                await _userSettingsService.SaveSettingsAsync(_userSettings);
+                await SaveUserSelectionsAsync();
 
                 var textToSynthesize = TextToSynthesize?.Trim();
 
@@ -287,13 +289,14 @@
                     {
                         FilePath = Path.GetTempPath() + Guid.NewGuid() + ".wav",
                         Locale = SelectedLanguage.Locale,
+                        Voice = SelectedLanguageStyle?.ShortName,
                         Text = textToSynthesize.Trim(),
                         ConvertToAsteriskFormat = ConvertToAsteriskFormat
                     };
 
                     _cts = new CancellationTokenSource();
 
-                    var speechSynhesisOptions = new SpeechSynhesisOptionsModel(textToSynthesize.Trim(), SelectedLanguage.Locale, _tempSynthesizedFile.FilePath, false, ConvertToAsteriskFormat);
+                    var speechSynhesisOptions = new SpeechSynhesisOptionsModel(textToSynthesize.Trim(), SelectedLanguage.Locale, _tempSynthesizedFile.FilePath, false, ConvertToAsteriskFormat, SelectedLanguageStyle?.ShortName);
 
                     var progress = new Progress<SpeechSynthesisResultModel>(result =>
                     {
@@ -330,11 +333,7 @@
             finally
             {
                 Progress = new ProgressViewModel();
-                //ShowTranscribe = Visibility.Visible;
-                //ShowCancelTranscribe = Visibility.Hidden;
             }
-
-
         }
 
         private void DisposeAudioResources()
@@ -362,11 +361,24 @@
 
         private bool SynthesizedFileExists()
         {
-            return _tempSynthesizedFile != null && _tempSynthesizedFile.ConvertToAsteriskFormat == ConvertToAsteriskFormat && _tempSynthesizedFile.Locale == SelectedLanguage?.Locale && _tempSynthesizedFile.Text == TextToSynthesize?.Trim() && File.Exists(_tempSynthesizedFile.FilePath);
+            return _tempSynthesizedFile != null
+                && _tempSynthesizedFile.ConvertToAsteriskFormat == ConvertToAsteriskFormat
+                && _tempSynthesizedFile.Locale == SelectedLanguage?.Locale
+                && _tempSynthesizedFile.Text == TextToSynthesize?.Trim()
+                && _tempSynthesizedFile.Voice == SelectedLanguageStyle?.ShortName
+                && File.Exists(_tempSynthesizedFile.FilePath);
         }
 
+        private async Task SaveUserSelectionsAsync()
+        {
+            _userSettings.SpeechSynthesisSettings.GenerateTranscriptionFile = GenerateTransriptionFile;
+            _userSettings.SpeechSynthesisSettings.Language = SelectedLanguage;
+            _userSettings.SpeechSynthesisSettings.ConvertToAsteriskFormat = ConvertToAsteriskFormat;
+            _userSettings.SpeechSynthesisSettings.Voice = SelectedLanguageStyle;
+            await _userSettingsService.SaveSettingsAsync(_userSettings);
+        }
 
-        async Task CloseSpeechSynthesisInfoBar()
+        private async Task CloseSpeechSynthesisInfoBar()
         {
             await Task.Delay(1000);
             SynthesisInfoBar = new InfoMessageModel();
