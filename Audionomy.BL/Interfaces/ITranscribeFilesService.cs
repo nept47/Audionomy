@@ -1,10 +1,9 @@
-﻿using Audionomy.BL.DataModels;
-
-namespace Audionomy.BL.Interfaces
+﻿namespace Audionomy.BL.Interfaces
 {
+    using Audionomy.BL.DataModels;
+
     public interface ITranscribeFilesService
     {
-        Task TranscribeAndSaveAsync(List<FileInfo> wavFiles, SpeechTranscriptionBaseOptionsModel options, IProgress<TranscriptionResultModel>? progress = null, CancellationToken cancellationToken = default);
-        Task TranscribeAndSaveAsync(List<FileInfo> wavFiles, SpeechTranscriptionExtentOptionsModel options, IProgress<TranscriptionResultModel>? progress = null, CancellationToken cancellationToken = default);
+        Task TranscribeAsync(List<FileInfo> wavFiles, SpeechTranscriptionOptionsModel options, IProgress<TranscriptionResultModel>? progress = null, CancellationToken cancellationToken = default);
     }
 }

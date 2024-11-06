@@ -65,26 +65,26 @@
             await outputFile.WriteLineAsync(options.Text);
         }
 
-        private static void ValidateOptionsAndSettings(ApplicationSettingsModel settings, SpeechSynhesisOptionsModel speechSynhesisOptions)
+        private static void ValidateOptionsAndSettings(ApplicationSettingsModel settings, SpeechSynhesisOptionsModel options)
         {
-            if (string.IsNullOrEmpty(speechSynhesisOptions.LanguageCode))
-            {
-                throw new ArgumentException("The output language cannot be null or empty.", nameof(speechSynhesisOptions.LanguageCode));
-            }
-
-            if (string.IsNullOrEmpty(speechSynhesisOptions.OutputFile))
-            {
-                throw new ArgumentException("The output file cannot be null or empty.", nameof(speechSynhesisOptions.OutputFile));
-            }
-
-            if (string.IsNullOrEmpty(speechSynhesisOptions.Text))
-            {
-                throw new ArgumentException("The text cannot be null or empty.", nameof(speechSynhesisOptions.Text));
-            }
-
             if (string.IsNullOrEmpty(settings.Key) || string.IsNullOrEmpty(settings.Region))
             {
                 throw new ArgumentException("Missing Azure Key and Location/Region.");
+            }
+
+            if (string.IsNullOrEmpty(options.LanguageCode))
+            {
+                throw new ArgumentException("The output language cannot be null or empty.", nameof(options.LanguageCode));
+            }
+
+            if (string.IsNullOrEmpty(options.OutputFile))
+            {
+                throw new ArgumentException("The output file cannot be null or empty.", nameof(options.OutputFile));
+            }
+
+            if (string.IsNullOrEmpty(options.Text))
+            {
+                throw new ArgumentException("The text cannot be null or empty.", nameof(options.Text));
             }
         }
 
