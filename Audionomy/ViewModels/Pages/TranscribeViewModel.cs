@@ -2,7 +2,6 @@
 {
     using Audionomy.BL.DataModels;
     using Audionomy.BL.Interfaces;
-    using Audionomy.BL.Services;
     using Audionomy.Services;
     using CommunityToolkit.Mvvm.ComponentModel;
     using CommunityToolkit.Mvvm.Input;
@@ -39,8 +38,8 @@
         private bool _generateSingleFile = false;
 
         [ObservableProperty]
-        private string _numberOfAudioFiles = string.Empty; 
-        
+        private string _numberOfAudioFiles = string.Empty;
+
         [ObservableProperty]
         private int _selectedLanguageIndex = 0;
 
@@ -80,18 +79,10 @@
             _appSettings = await _applicationSettingsService.LoadSettingsAsync();
             ComboBoxLanguages = new ObservableCollection<VoiceLanguageModel>(_appSettings.ActiveLanguages);
             _userSettings = await _userSettingsService.LoadSettingsAsync();
+            await Task.Delay(3000);
             SelectedLanguageIndex = ComboBoxLanguages.Select((language, index) => new { Language = language, Index = index })
                 .FirstOrDefault(x => x.Language.Locale == _userSettings.TranscriptionSettings?.Language?.Locale)?.Index ?? 0;
-
-            if (!_isInitialized)
-            {
-
-                _userSettings = await _userSettingsService.LoadSettingsAsync();
-                SelectedLanguage = _userSettings.TranscriptionSettings.Language;
-                GenerateSingleFile = _userSettings.TranscriptionSettings.IsSigleFileExportMode;
-
-                _isInitialized = true;
-            }
+            GenerateSingleFile = _userSettings.TranscriptionSettings.IsSigleFileExportMode;
         }
 
         [RelayCommand]
@@ -179,14 +170,10 @@
 
                 _cts = new CancellationTokenSource();
 
-                if (GenerateSingleFile)
-                {
-                    await _transcribeFilesService.TranscribeAndSaveAsync(files, new SpeechTranscriptionExtentOptionsModel { Locate = SelectedLanguage.Locale }, progress, _cts.Token);
-                }
-                else
-                {
-                    await _transcribeFilesService.TranscribeAndSaveAsync(files, new SpeechTranscriptionBaseOptionsModel { Locate = SelectedLanguage.Locale }, progress, _cts.Token);
-                }
+                await _transcribeFilesService.TranscribeAsync(files, new SpeechTranscriptionOptionsModel { Language = SelectedLanguage.Locale, UseSingleOutputFile = GenerateSingleFile, OutputDirectory = OpenedFolderPath }, progress, _cts.Token);
+
+                TranscriptionInfoBar = new InfoMessageModel($"Transcription complete! Your file(s) are ready.", InfoBarSeverity.Success);
+                CloseSpeechSynthesisInfoBar();
             }
             catch (OperationCanceledException ex)
             {
@@ -209,6 +196,12 @@
         {
             Progress = new ProgressViewModel(0, 0, "Cancelling operation...please wait", string.Empty);
             _cts?.Cancel();
+        }
+
+        private async Task CloseSpeechSynthesisInfoBar()
+        {
+            await Task.Delay(1000);
+            TranscriptionInfoBar = new InfoMessageModel();
         }
     }
 }
