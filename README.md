@@ -2,7 +2,7 @@
 
 **Audionomy** is a desktop application for seamless audio transcription and synthesis, powered by Azure's Speech Services. Designed with simplicity and efficiency in mind, Audionomy allows users to convert WAV audio files to text and text files to WAV audio, ideal for creating accessible content, voice notes, and more.
 
-![image](https://github.com/user-attachments/assets/0631383d-cfb0-4802-a3d7-2f27ac6dfc9a)
+![image](https://github.com/user-attachments/assets/d3910f8d-ba2b-4dd6-a9c0-8c6e80474451)
 
 
 
