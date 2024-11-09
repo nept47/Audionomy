@@ -20,6 +20,6 @@
 - **Cloud Services**: Azure Speech Service for audio transcription and synthesis.
 
 ## Download
-The latest compiled version of **Audionomy** is available for download [here](https://github.com/nept47/Audionomy/releases/download/v0.9.0-beta/Audionomy-v0.9.0-beta.7z). After downloading, simply extract the files and run the executable (Audionomy.exe).
+The latest compiled version of **Audionomy** is available for download [here](https://github.com/nept47/Audionomy/releases/download/v0.9.1-beta/Audionomy-v0.9.1-beta.7z). After downloading, simply extract the files and run the executable (Audionomy.exe).
 
 
