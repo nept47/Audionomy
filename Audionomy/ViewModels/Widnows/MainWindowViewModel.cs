@@ -1,14 +1,9 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Wpf.Ui.Controls;
-
-namespace Audionomy.ViewModels.Widnows
+﻿namespace Audionomy.ViewModels.Widnows
 {
+    using CommunityToolkit.Mvvm.ComponentModel;
+    using System.Collections.ObjectModel;
+    using Wpf.Ui.Controls;
+
     public partial class MainWindowViewModel : ObservableObject
     {
         [ObservableProperty]

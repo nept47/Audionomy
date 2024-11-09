@@ -4,6 +4,7 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:Audionomy.Views.Pages"
+      xmlns:helper="clr-namespace:Audionomy.Helpers"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800"
       Title="SpeechSynthesizePage"
@@ -12,6 +13,9 @@
       ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
       ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
       Foreground="{DynamicResource TextFillColorPrimaryBrush}">
+    <Page.Resources>
+        <helper:BooleanNegationConverter x:Key="BooleanNegationConverter" />
+    </Page.Resources>
     <Grid Margin="0,0,0,0">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -29,32 +33,34 @@
             <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
         <ui:TextBlock Grid.Row="0" Appearance="Secondary" FontTypography="Caption" Text="Text" Margin="1,0,0,4" />
-        <ui:TextBox  Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" HorizontalAlignment="Stretch" Height="75" AcceptsReturn="True"
+        <ui:TextBox IsEnabled="{Binding ViewModel.RequiresConfiguration, Converter={StaticResource BooleanNegationConverter}}" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" HorizontalAlignment="Stretch" Height="75" AcceptsReturn="True"
               PlaceholderText="Enter text or load from file..." TextWrapping="Wrap" Text="{Binding ViewModel.TextToSynthesize, Mode=TwoWay}" />
-        <ui:Button Grid.Row="1" Grid.Column="3" Content="" ToolTipService.ToolTip="Load file" Command="{Binding ViewModel.OpenFileCommand}" VerticalAlignment="Stretch"
+        <ui:Button IsEnabled="{Binding ViewModel.RequiresConfiguration, Converter={StaticResource BooleanNegationConverter}}" Grid.Row="1" Grid.Column="3" Content="" ToolTipService.ToolTip="Load file" Command="{Binding ViewModel.OpenFileCommand}" VerticalAlignment="Stretch"
                    Icon="{ui:SymbolIcon Symbol=FolderOpen20, Filled=True}" Margin="5,0,0,0"/>
         <ui:TextBlock Grid.Row="2" Grid.Column="0" Margin="0,10,0,0" FontSize="{DynamicResourceExtension ControlContentThemeFontSize}" VerticalAlignment="Center" Text="Language" />
-        <ComboBox Grid.Row="2" Grid.Column="1" Margin="10,10,0,0" HorizontalAlignment="Left" MinWidth="250px" SelectionChanged="LanguageComboBox_SelectionChanged"
+        <ComboBox IsEnabled="{Binding ViewModel.RequiresConfiguration, Converter={StaticResource BooleanNegationConverter}}" Grid.Row="2" Grid.Column="1" Margin="10,10,0,0" HorizontalAlignment="Left" MinWidth="250px" SelectionChanged="LanguageComboBox_SelectionChanged"
                SelectedItem="{Binding ViewModel.SelectedLanguage, Mode=TwoWay}"      
                SelectedIndex="{Binding ViewModel.SelectedLanguageIndex, Mode=TwoWay}"                      
                ItemsSource="{Binding ViewModel.ComboBoxLanguages, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:SpeechSynthesizePage}, Mode=OneWay}">
         </ComboBox>
-        <ui:ToggleSwitch VerticalAlignment="Center" Margin="0,10,15,0"
+        <ui:ToggleSwitch  IsEnabled="{Binding ViewModel.RequiresConfiguration, Converter={StaticResource BooleanNegationConverter}}" VerticalAlignment="Center" Margin="0,10,15,0"
                  Grid.Row="2" Grid.Column="2" FlowDirection="RightToLeft"  
                  IsChecked="{Binding ViewModel.ConvertToAsteriskFormat, Mode=TwoWay }"   
                  OffContent="Original format"
                  OnContent="Asterisk format" />
-        <ui:Button Grid.Row="2" Grid.Column="3" Margin="5,10,0,0" VerticalAlignment="Stretch" ToolTipService.ToolTip="Listen the text" Command="{Binding ViewModel.GenerateTmpFileCommand, Mode=OneWay}"  Visibility="{Binding ViewModel.ShowTranscribe, Mode=OneWay}" Icon="{ui:SymbolIcon Symbol=Speaker216, Filled=True}" />
+        <ui:Button  IsEnabled="{Binding ViewModel.RequiresConfiguration, Converter={StaticResource BooleanNegationConverter}}" Grid.Row="2" Grid.Column="3" Margin="5,10,0,0" VerticalAlignment="Stretch" ToolTipService.ToolTip="Listen the text" Command="{Binding ViewModel.GenerateTmpFileCommand, Mode=OneWay}"  Visibility="{Binding ViewModel.ShowTranscribe, Mode=OneWay}" Icon="{ui:SymbolIcon Symbol=Speaker216, Filled=True}" />
         <ui:TextBlock Grid.Row="3" Grid.Column="0" Margin="0,10,0,0" FontSize="{DynamicResourceExtension ControlContentThemeFontSize}" VerticalAlignment="Center" Text="Voice" />
-        <ComboBox Grid.Row="3" Grid.Column="1" Margin="10,10,0,0" HorizontalAlignment="Left" MinWidth="250px" 
+        <ComboBox IsEnabled="{Binding ViewModel.RequiresConfiguration, Converter={StaticResource BooleanNegationConverter}}" Grid.Row="3" Grid.Column="1" Margin="10,10,0,0" HorizontalAlignment="Left" MinWidth="250px" 
                   SelectedItem="{Binding ViewModel.SelectedLanguageStyle, Mode=TwoWay}" 
                   SelectedIndex="{Binding ViewModel.SelectedLanguageStyleIndex, Mode=TwoWay}"                      
                   ItemsSource="{Binding ViewModel.SelectedLanguage.Voices, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:SpeechSynthesizePage}, Mode=OneWay}">
         </ComboBox>
         <ui:TextBlock Grid.Row="4" Grid.Column="0" Margin="0,10,0,0" FontSize="{DynamicResourceExtension ControlContentThemeFontSize}" VerticalAlignment="Center" Text="Save text to file" />
-        <CheckBox  Grid.Row="4" Grid.Column="1" Margin="10,10,0,0" IsChecked="{Binding ViewModel.GenerateTransriptionFile, Mode=TwoWay}"/>
-        <ui:Button Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="4" Margin="0,50,0,0" HorizontalAlignment="Stretch"  Command="{Binding ViewModel.GenerateFileCommand, Mode=OneWay}"  Content="Generate &amp; Save audio file"  />
-        <ui:InfoBar Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="43" VerticalAlignment="Bottom" Message="{Binding ViewModel.SynthesisInfoBar.Message}" Severity="{Binding ViewModel.SynthesisInfoBar.Severity}" IsOpen="{Binding ViewModel.SynthesisInfoBar.IsOpen, Mode=TwoWay}"/>
+        <CheckBox IsEnabled="{Binding ViewModel.RequiresConfiguration, Converter={StaticResource BooleanNegationConverter}}"  Grid.Row="4" Grid.Column="1" Margin="10,10,0,0" IsChecked="{Binding ViewModel.GenerateTransriptionFile, Mode=TwoWay}"/>
+        <ui:Button IsEnabled="{Binding ViewModel.RequiresConfiguration, Converter={StaticResource BooleanNegationConverter}}" Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="4" Margin="0,50,0,0" HorizontalAlignment="Stretch"  Command="{Binding ViewModel.GenerateFileCommand, Mode=OneWay}"  Content="Generate &amp; Save audio file"  />
+        <ui:InfoBar Title="{Binding ViewModel.SynthesisInfoBar.Title}" IsClosable="{Binding ViewModel.SynthesisInfoBar.IsClosable}" Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="43" 
+                    VerticalAlignment="Bottom" Message="{Binding ViewModel.SynthesisInfoBar.Message}" Severity="{Binding ViewModel.SynthesisInfoBar.Severity}"
+                    IsOpen="{Binding ViewModel.SynthesisInfoBar.IsOpen, Mode=TwoWay}"/>
         <StackPanel VerticalAlignment="Bottom" Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="4" Margin="0,0,0,0" Visibility="{Binding ViewModel.Progress.Visibility}" >
             <ProgressBar Value="{Binding ViewModel.Progress.Value, Mode=OneWay}" Maximum="{Binding ViewModel.Progress.MaxValue, Mode=OneWay}" />
             <DockPanel LastChildFill="True" >

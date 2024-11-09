@@ -10,8 +10,7 @@
       ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
       Foreground="{DynamicResource TextFillColorPrimaryBrush}">
     <Page.Resources>
-        
-        <helpers:CollectionToCommaSeparatedStringConverter x:Key="CollectionToCommaSeparatedStringConverter" />
+        <helpers:IsListEmptyToVisibilityConverter x:Key="IsListEmptyToVisibilityConverter" />
         <SolidColorBrush x:Key="TabViewItemHeaderBackgroundSelected" Color="{StaticResource CardBackgroundFillColorDefault}" />
 
         <Style TargetType="TabItem" BasedOn="{StaticResource {x:Type TabItem}}">
@@ -21,7 +20,7 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
-        
+
     </Page.Resources>
 
     <TabControl Margin="0,0,0,0">
@@ -37,6 +36,7 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
                 <Border VerticalAlignment="Top" Grid.Row="0" Padding="16"  Background="{ui:ThemeResource CardBackgroundFillColorDefaultBrush}"
                         BorderBrush="{ui:ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1,1,1,0" CornerRadius="0,0,8,8" HorizontalAlignment="Stretch">
@@ -52,14 +52,25 @@
                     </StackPanel>
                 </Border>
                 <ui:Button Grid.Row="1" HorizontalAlignment="Right" Width="150" Margin="0,10,0,0" Command="{Binding ViewModel.SaveAzureCredentialsCommand, Mode=OneWay}" Content="Save" Icon="Fluent24" />
-                <ui:InfoBar Grid.Row="3" VerticalAlignment="Bottom" Message="{Binding ViewModel.AzureInfoBar.Message}" Severity="{Binding ViewModel.AzureInfoBar.Severity}" IsOpen="{Binding ViewModel.AzureInfoBar.IsOpen, Mode=TwoWay}"/>
+                <ui:InfoBar Title="{Binding ViewModel.AzureInfoBar.Title}" IsClosable="{Binding ViewModel.AzureInfoBar.IsClosable}" Grid.Row="3" VerticalAlignment="Bottom" Message="{Binding ViewModel.AzureInfoBar.Message, Mode=TwoWay}"
+                            Severity="{Binding ViewModel.AzureInfoBar.Severity}" IsOpen="{Binding ViewModel.AzureInfoBar.IsOpen, Mode=TwoWay}"/>
             </Grid>
         </TabItem>
         <TabItem IsEnabled="{Binding ViewModel.IsLanguageSelectionTabEnabled}" >
             <TabItem.Header>
                 <StackPanel Orientation="Horizontal">
                     <ui:SymbolIcon Margin="0,0,6,0" Symbol="LocalLanguage16" />
-                    <TextBlock Text="Language Selection" />
+                    <TextBlock Text="Active Languages" />
+                    <ui:InfoBadge
+                        Margin="5,-5,5,0"
+                        Icon="{ui:SymbolIcon Alert16}"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Top"
+                        Severity="Caution"
+                        Value="!"
+                        Style="{DynamicResource ValueInfoBadgeStyle}"
+                        Visibility="{Binding ViewModel.ActiveLanguages,  Converter={StaticResource IsListEmptyToVisibilityConverter}, Mode=OneWay}"
+                         />
                 </StackPanel>
             </TabItem.Header>
             <Border Grid.Row="0" Padding="16" Background="{ui:ThemeResource CardBackgroundFillColorDefaultBrush}"
@@ -90,7 +101,7 @@
                         </ui:ListView>
                     </Border>
                     <DockPanel Grid.Column="2" Grid.Row="0" >
-                        <Label Content="Selected: " VerticalAlignment="Center" Target="{Binding ElementName=TxtAzureSpeechServiceKey, UpdateSourceTrigger=PropertyChanged}" />
+                        <Label Content="Active: " VerticalAlignment="Center" Target="{Binding ElementName=TxtAzureSpeechServiceKey, UpdateSourceTrigger=PropertyChanged}" />
                         <Label VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Content="{Binding ViewModel.ActiveLanguages.Count, Mode=OneWay}" />
                         <ui:Button HorizontalAlignment="Right"  Width="100" Command="{Binding ViewModel.ClearActiveLanguagesCommand}" Content="Clear" Icon="{ui:SymbolIcon Symbol=Delete16}" />
                     </DockPanel>
@@ -103,7 +114,7 @@
                             </ui:ListView.ItemTemplate>
                         </ui:ListView>
                     </Border>
-                    <ui:TextBlock FontTypography="body" FontStyle="Italic" Grid.Row="3" Margin="3,10,0,0" Text="Double-click to add or remove a language." />
+                    <ui:TextBlock FontTypography="body" FontStyle="Italic" Grid.Row="3" Grid.ColumnSpan="3" Margin="3,10,0,0" Text="Double-click a language to add or remove it from your selection." />
                 </Grid>
             </Border>
         </TabItem>

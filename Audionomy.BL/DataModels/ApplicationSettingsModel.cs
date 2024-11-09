@@ -24,5 +24,10 @@ namespace Audionomy.BL.DataModels
             Languages = languages ?? [];
             ActiveLanguages = activeLanguages ?? [];
         }
+
+        public bool RequiresConfiguration()
+        {
+            return  string.IsNullOrWhiteSpace(Key) || string.IsNullOrWhiteSpace(Region);
+        }
     }
 }

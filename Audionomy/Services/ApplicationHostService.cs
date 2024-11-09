@@ -1,7 +1,9 @@
-﻿using Audionomy.Views.Windows;
+﻿using Audionomy.BL.Interfaces;
+using Audionomy.BL.Services;
+using Audionomy.Views.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-
+using System.Windows.Navigation;
 using Wpf.Ui;
 
 namespace Audionomy.Services
@@ -12,12 +14,14 @@ namespace Audionomy.Services
     public class ApplicationHostService : IHostedService
     {
         private readonly IServiceProvider _serviceProvider;
-
+        private readonly IApplicationSettingsService _applicationSettingsService;
         private INavigationWindow _navigationWindow;
 
-        public ApplicationHostService(IServiceProvider serviceProvider)
+        public ApplicationHostService(IServiceProvider serviceProvider,
+            IApplicationSettingsService applicationSettingsService)
         {
             _serviceProvider = serviceProvider;
+            _applicationSettingsService = applicationSettingsService;
         }
 
         /// <summary>
@@ -50,7 +54,15 @@ namespace Audionomy.Services
                 )!;
                 _navigationWindow!.ShowWindow();
 
-                _navigationWindow.Navigate(typeof(Views.Pages.SpeechSynthesizePage));
+                var settings = _applicationSettingsService.LoadSettings();
+                if (settings.RequiresConfiguration() || settings.ActiveLanguages.Count == 0)
+                {
+                    _navigationWindow.Navigate(typeof(Views.Pages.SettingsPage));
+                }
+                else
+                {
+                    _navigationWindow.Navigate(typeof(Views.Pages.SpeechSynthesizePage));
+                }
             }
 
             await Task.CompletedTask;

@@ -44,6 +44,31 @@
             }
         }
 
+        public ApplicationSettingsModel LoadSettings()
+        {
+            try
+            {
+                if (!File.Exists(_settingsFilePath))
+                {
+                    return new ApplicationSettingsModel();
+                }
+
+                using var reader = new StreamReader(_settingsFilePath);
+                var fileContent = reader.ReadToEnd();
+
+                var settings = JsonSerializer.Deserialize<ApplicationSettingsModel>(_aesEncryption.Decrypt(fileContent)) ?? new ApplicationSettingsModel();
+                settings.ActiveLanguages = settings.ActiveLanguages.OrderBy(x => x.Description).ToList();
+                settings.Languages = settings.Languages.OrderBy(x => x.Description).ToList();
+
+                return settings;
+            }
+            catch
+            {
+                // TODO: Handle exception
+                return new ApplicationSettingsModel();
+            }
+        }
+
         public async Task<bool> SaveAzureCredentialsAsync(string key, string region)
         {
             var directory = Path.GetDirectoryName(_settingsFilePath);

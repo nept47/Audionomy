@@ -4,6 +4,7 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:Audionomy.Views.Pages"
+      xmlns:helper="clr-namespace:Audionomy.Helpers"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800"
       Title="TranscribePage"
@@ -12,14 +13,17 @@
       ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
       ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
       Foreground="{DynamicResource TextFillColorPrimaryBrush}">
-
+    <Page.Resources>
+        <helper:BooleanNegationConverter x:Key="BooleanNegationConverter" />
+    </Page.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <Grid Grid.Row="0">
@@ -28,7 +32,7 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <ui:Button Grid.Column="0" Command="{Binding ViewModel.OpenFolderCommand}" Content="Select folder" />
+            <ui:Button IsEnabled="{Binding ViewModel.RequiresConfiguration, Converter={StaticResource BooleanNegationConverter}}" Grid.Column="0" Command="{Binding ViewModel.OpenFolderCommand}" Content="Select folder" />
             <StackPanel Grid.Column="1" Margin="16,0,0,0"  VerticalAlignment="Center" >
                 <ui:TextBlock Text="Picked folder" Visibility="{Binding ViewModel.OpenedFolderPathVisibility}"/>
                 <ui:TextBlock FontTypography="BodyStrong" Text="{Binding ViewModel.OpenedFolderPath}" />
@@ -49,10 +53,11 @@
                 <ui:TextBlock FontSize="{DynamicResourceExtension ControlContentThemeFontSize}"  VerticalAlignment="Center" Text="Language" 
                               Padding="11,5,11,6"/>
             </Border>
-            <ComboBox  HorizontalAlignment="Left" Grid.Column="1" Margin="16,0,0,0" MinWidth="300px"
-                       SelectedValue="{Binding ViewModel.SelectedLanguage, Mode=TwoWay}"
-                       SelectedIndex="{Binding ViewModel.SelectedLanguageIndex, Mode=TwoWay}"                      
-                       ItemsSource="{Binding ViewModel.ComboBoxLanguages, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:TranscribePage}, Mode=OneWay}" >
+            <ComboBox IsEnabled="{Binding ViewModel.RequiresConfiguration, Converter={StaticResource BooleanNegationConverter}}"
+                      HorizontalAlignment="Left" Grid.Column="1" Margin="16,0,0,0" MinWidth="300px"
+                      SelectedValue="{Binding ViewModel.SelectedLanguage, Mode=TwoWay}"
+                      SelectedIndex="{Binding ViewModel.SelectedLanguageIndex, Mode=TwoWay}"                      
+                      ItemsSource="{Binding ViewModel.ComboBoxLanguages, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:TranscribePage}, Mode=OneWay}" >
                 <ComboBox.ItemTemplate>
                     <DataTemplate>
                         <TextBlock Text="{Binding}" />
@@ -70,13 +75,14 @@
                 <ui:TextBlock FontSize="{DynamicResourceExtension ControlContentThemeFontSize}"  VerticalAlignment="Center" Text="Single file" 
                       Padding="11,5,11,6"/>
             </Border>
-            <CheckBox Grid.Column="1" Margin="16,0,0,0"  Grid.Row="2"  IsChecked="{Binding ViewModel.GenerateSingleFile, Mode=TwoWay}"/>
+            <CheckBox IsEnabled="{Binding ViewModel.RequiresConfiguration, Converter={StaticResource BooleanNegationConverter}}" Grid.Column="1" Margin="16,0,0,0"  Grid.Row="2"  IsChecked="{Binding ViewModel.GenerateSingleFile, Mode=TwoWay}"/>
         </Grid>
-        <ui:Button Grid.Row="3" HorizontalAlignment="Stretch" Margin="0,30,0,0" Command="{Binding ViewModel.TranscribeCommand, Mode=OneWay}"  Visibility="{Binding ViewModel.ShowTranscribe, Mode=OneWay}" Content="Generate text file(s)" Icon="Fluent24" />
-        <ui:Button Grid.Row="3" HorizontalAlignment="Stretch" Margin="0,30,0,0" Command="{Binding ViewModel.CancelTranscribeCommand, Mode=OneWay}" Visibility="{Binding ViewModel.ShowCancelTranscribe, Mode=OneWay}" Content="Cancel transcription" Icon="Fluent24" />
+        <ui:Button IsEnabled="{Binding ViewModel.RequiresConfiguration, Converter={StaticResource BooleanNegationConverter}}" Grid.Row="4" HorizontalAlignment="Stretch" Margin="0,30,0,0" Command="{Binding ViewModel.TranscribeCommand, Mode=OneWay}"  Visibility="{Binding ViewModel.ShowTranscribe, Mode=OneWay}" Content="Generate text file(s)" Icon="Fluent24" />
+        <ui:Button Grid.Row="4" HorizontalAlignment="Stretch" Margin="0,50,0,0" Command="{Binding ViewModel.CancelTranscribeCommand, Mode=OneWay}" Visibility="{Binding ViewModel.ShowCancelTranscribe, Mode=OneWay}" Content="Cancel transcription" Icon="Fluent24" />
 
-        <ui:InfoBar Grid.Row="4" VerticalAlignment="Bottom" Message="{Binding ViewModel.TranscriptionInfoBar.Message}" Severity="{Binding ViewModel.TranscriptionInfoBar.Severity}" IsOpen="{Binding ViewModel.TranscriptionInfoBar.IsOpen, Mode=TwoWay}"/>
-        <StackPanel VerticalAlignment="Bottom" Grid.Row="4" Margin="0,0,0,0" Visibility="{Binding ViewModel.Progress.Visibility}" >
+        <ui:InfoBar Grid.Row="5" Title="{Binding ViewModel.TranscriptionInfoBar.Title}" IsClosable="{Binding ViewModel.TranscriptionInfoBar.IsClosable}"  VerticalAlignment="Bottom" Message="{Binding ViewModel.TranscriptionInfoBar.Message}" 
+                    Severity="{Binding ViewModel.TranscriptionInfoBar.Severity}" IsOpen="{Binding ViewModel.TranscriptionInfoBar.IsOpen, Mode=TwoWay}"/>
+        <StackPanel Grid.Row="5" VerticalAlignment="Bottom" Margin="0,0,0,0" Visibility="{Binding ViewModel.Progress.Visibility}" >
             <ProgressBar Value="{Binding ViewModel.Progress.Value, Mode=OneWay}" Maximum="{Binding ViewModel.Progress.MaxValue, Mode=OneWay}" />
             <DockPanel LastChildFill="True" >
                 <ui:TextBlock VerticalAlignment="Center" Text="{Binding ViewModel.Progress.CurrentAction}" Padding="0,5,11,6"/>
