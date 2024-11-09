@@ -3,6 +3,7 @@
     using Audionomy.BL.DataModels;
     using Audionomy.BL.Extensions;
     using Audionomy.BL.Interfaces;
+    using Audionomy.Providers;
     using Audionomy.Models;
     using CommunityToolkit.Mvvm.ComponentModel;
     using CommunityToolkit.Mvvm.Input;
@@ -97,21 +98,19 @@
             RequiresConfiguration = _appSettings.RequiresConfiguration();
             if (RequiresConfiguration)
             {
-                SynthesisInfoBar = new InfoMessageModel("Azure credentials are required", "Please configure them before proceeding.", InfoBarSeverity.Warning, false);
+                SynthesisInfoBar = InformationMessageProvider.GetMissingCredentialsMessage();
                 return;
             }
             else if (_appSettings.ActiveLanguages.Count == 0)
             {
                 RequiresConfiguration = true;
-                SynthesisInfoBar = new InfoMessageModel("No active languages selected", "Please go to Settings > Active Languages to choose your preferred languages.", InfoBarSeverity.Warning, false);
+                SynthesisInfoBar = InformationMessageProvider.GetNoLanguagesSelectedMessage();
                 return;
             }
             else
             {
                 SynthesisInfoBar = new InfoMessageModel();
             }
-
-
 
             ComboBoxLanguages = new ObservableCollection<VoiceLanguageModel>(_appSettings.ActiveLanguages);
             _userSettings = await _userSettingsService.LoadSettingsAsync();
@@ -194,13 +193,13 @@
 
                 if (string.IsNullOrEmpty(textToSynthesize))
                 {
-                    SynthesisInfoBar = new InfoMessageModel("The text can't be empty.", InfoBarSeverity.Warning);
+                    SynthesisInfoBar = InformationMessageProvider.GetEmptyTextMessage();
                     return;
                 }
 
                 if (string.IsNullOrEmpty(SelectedLanguage?.Locale))
                 {
-                    SynthesisInfoBar = new InfoMessageModel("Please select a language.", InfoBarSeverity.Warning);
+                    SynthesisInfoBar = InformationMessageProvider.GetNoSelectLanguageMessage();
                     return;
                 }
 
@@ -222,7 +221,7 @@
 
                 if (string.IsNullOrEmpty(filePath))
                 {
-                    SynthesisInfoBar = new InfoMessageModel("File name is invalid", InfoBarSeverity.Warning);
+                    SynthesisInfoBar = InformationMessageProvider.GetInvalidFileNameMessage();
                     return;
                 }
 
@@ -255,22 +254,20 @@
                     await _speechSynthesisService.ExportTransctiption(speechSynhesisOptions, progress);
                 }
 
-                SynthesisInfoBar = new InfoMessageModel("Audio file generated.", InfoBarSeverity.Success);
+                SynthesisInfoBar = InformationMessageProvider.GetAudioFileGeneratedMessage();
                 CloseSpeechSynthesisInfoBar();
             }
             catch (OperationCanceledException ex)
             {
-                SynthesisInfoBar = new InfoMessageModel(ex.Message, InfoBarSeverity.Warning);
+                SynthesisInfoBar = InformationMessageProvider.GetSynthesisCanceledMessage();
             }
             catch (Exception ex)
             {
-                SynthesisInfoBar = new InfoMessageModel(ex.Message, InfoBarSeverity.Error);
+                SynthesisInfoBar = InformationMessageProvider.GetGenericErrorMessage(ex.Message);
             }
             finally
             {
                 Progress = new ProgressViewModel();
-                //ShowTranscribe = Visibility.Visible;
-                //ShowCancelTranscribe = Visibility.Hidden;
             }
         }
 
@@ -294,13 +291,13 @@
 
                 if (string.IsNullOrEmpty(textToSynthesize))
                 {
-                    SynthesisInfoBar = new InfoMessageModel("The text can't be empty.", InfoBarSeverity.Warning);
+                    SynthesisInfoBar = InformationMessageProvider.GetEmptyTextMessage();
                     return;
                 }
 
                 if (string.IsNullOrEmpty(SelectedLanguage?.Locale))
                 {
-                    SynthesisInfoBar = new InfoMessageModel("Please select a language.", InfoBarSeverity.Warning);
+                    SynthesisInfoBar = InformationMessageProvider.GetNoSelectLanguageMessage();
                     return;
                 }
 
@@ -346,11 +343,11 @@
             }
             catch (OperationCanceledException ex)
             {
-                SynthesisInfoBar = new InfoMessageModel(ex.Message, InfoBarSeverity.Warning);
+                SynthesisInfoBar = InformationMessageProvider.GetSynthesisCanceledMessage();
             }
             catch (Exception ex)
             {
-                SynthesisInfoBar = new InfoMessageModel(ex.Message, InfoBarSeverity.Error);
+                SynthesisInfoBar = InformationMessageProvider.GetGenericErrorMessage(ex.Message);
             }
             finally
             {

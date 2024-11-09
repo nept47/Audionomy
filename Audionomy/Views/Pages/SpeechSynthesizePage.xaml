@@ -5,7 +5,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Audionomy.Views.Pages"
-    xmlns:helper="clr-namespace:Audionomy.Helpers"
+    xmlns:converters="clr-namespace:Audionomy.Converters"
     mc:Ignorable="d"
     d:DesignHeight="450"
     d:DesignWidth="800"
@@ -16,7 +16,7 @@
     ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
     Foreground="{DynamicResource TextFillColorPrimaryBrush}">
     <Page.Resources>
-        <helper:BooleanNegationConverter
+        <converters:BooleanNegationConverter
             x:Key="BooleanNegationConverter" />
     </Page.Resources>
     <Grid
@@ -61,7 +61,7 @@
             HorizontalAlignment="Stretch"
             Height="75"
             AcceptsReturn="True"
-            PlaceholderText="Enter text or load from file..."
+            PlaceholderText="Type text or load from a file..."
             TextWrapping="Wrap"
             Text="{Binding ViewModel.TextToSynthesize, Mode=TwoWay}" />
         <ui:Button
@@ -101,7 +101,7 @@
             VerticalAlignment="Center"
             FlowDirection="RightToLeft"
             IsChecked="{Binding ViewModel.ConvertToAsteriskFormat, Mode=TwoWay }"
-            OffContent="Original format"
+            OffContent="Default format"
             OnContent="Asterisk format" />
         <ui:Button
             Grid.Row="2"
@@ -148,6 +148,7 @@
             Grid.Row="5"
             Grid.Column="0"
             Grid.ColumnSpan="43"
+            
             Title="{Binding ViewModel.SynthesisInfoBar.Title}"
             IsClosable="{Binding ViewModel.SynthesisInfoBar.IsClosable}"
             VerticalAlignment="Bottom"

@@ -2,6 +2,7 @@
 {
     using Audionomy.BL.DataModels;
     using Audionomy.BL.Interfaces;
+    using Audionomy.Providers;
     using Audionomy.Services;
     using CommunityToolkit.Mvvm.ComponentModel;
     using CommunityToolkit.Mvvm.Input;
@@ -80,24 +81,23 @@
         public async void OnNavigatedTo()
         {
             _appSettings = await _applicationSettingsService.LoadSettingsAsync();
+
             RequiresConfiguration = _appSettings.RequiresConfiguration();
             if (RequiresConfiguration)
             {
-                TranscriptionInfoBar = new InfoMessageModel("Azure credentials are required", "Please configure them before proceeding.", InfoBarSeverity.Warning, false);
+                TranscriptionInfoBar = InformationMessageProvider.GetMissingCredentialsMessage();
                 return;
             }
             else if (_appSettings.ActiveLanguages.Count == 0)
             {
                 RequiresConfiguration = true;
-                TranscriptionInfoBar = new InfoMessageModel("No active languages selected", "Please go to Settings > Active Languages to choose your preferred languages.", InfoBarSeverity.Warning, false);
+                TranscriptionInfoBar = InformationMessageProvider.GetNoLanguagesSelectedMessage();
                 return;
             }
             else
             {
                 TranscriptionInfoBar = new InfoMessageModel();
             }
-
-
 
             ComboBoxLanguages = new ObservableCollection<VoiceLanguageModel>(_appSettings.ActiveLanguages);
             _userSettings = await _userSettingsService.LoadSettingsAsync();
@@ -156,13 +156,13 @@
 
                 if (string.IsNullOrEmpty(OpenedFolderPath))
                 {
-                    TranscriptionInfoBar = new InfoMessageModel("Folder is not selected.", InfoBarSeverity.Warning);
+                    TranscriptionInfoBar = InformationMessageProvider.GetFolderNotSelectedMessage();
                     return;
                 }
 
                 if (string.IsNullOrEmpty(SelectedLanguage.Locale))
                 {
-                    TranscriptionInfoBar = new InfoMessageModel("Please select a language.", InfoBarSeverity.Warning);
+                    TranscriptionInfoBar = InformationMessageProvider.GetNoSelectLanguageMessage();
                     return;
                 }
 
@@ -171,7 +171,7 @@
 
                 if (_audioFileCountingService.ValidWavFiles(OpenedFolderPath) == 0)
                 {
-                    TranscriptionInfoBar = new InfoMessageModel("There are not wav files in the selected folder.", InfoBarSeverity.Warning);
+                    TranscriptionInfoBar = InformationMessageProvider.GetNoWavFilesInFolderMessage();
                     return;
                 }
 
@@ -199,11 +199,11 @@
             }
             catch (OperationCanceledException ex)
             {
-                TranscriptionInfoBar = new InfoMessageModel(ex.Message, InfoBarSeverity.Warning);
+                TranscriptionInfoBar = InformationMessageProvider.GetTranscriptionCanceledMessage();
             }
             catch (Exception ex)
             {
-                TranscriptionInfoBar = new InfoMessageModel(ex.Message, InfoBarSeverity.Error);
+                TranscriptionInfoBar = InformationMessageProvider.GetGenericErrorMessage(ex.Message);
             }
             finally
             {
