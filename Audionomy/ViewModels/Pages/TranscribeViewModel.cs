@@ -2,7 +2,7 @@
 {
     using Audionomy.BL.DataModels;
     using Audionomy.BL.Interfaces;
-    using Audionomy.Providers;
+    using Audionomy.helpers;
     using Audionomy.Services;
     using CommunityToolkit.Mvvm.ComponentModel;
     using CommunityToolkit.Mvvm.Input;
@@ -23,7 +23,6 @@
         private readonly INavigationWindow _navigationWindow;
         private ApplicationSettingsModel _appSettings;
         private UserSettingsModel _userSettings;
-        private bool _isInitialized;
         private CancellationTokenSource _cts;
 
         [ObservableProperty]
@@ -76,7 +75,7 @@
             _navigationWindow = (_serviceProvider.GetService(typeof(INavigationWindow)) as INavigationWindow)!;
         }
 
-        public async void OnNavigatedFrom() { }
+        public void OnNavigatedFrom() { }
 
         public async void OnNavigatedTo()
         {
@@ -126,7 +125,7 @@
 
             if (openFolderDialog.FolderNames.Length == 0)
             {
-                OpenedFolderPath = null;
+                OpenedFolderPath = string.Empty;
                 return;
             }
 
@@ -160,7 +159,7 @@
                     return;
                 }
 
-                if (string.IsNullOrEmpty(SelectedLanguage.Locale))
+                if (string.IsNullOrEmpty(SelectedLanguage?.Locale))
                 {
                     TranscriptionInfoBar = InformationMessageProvider.GetNoSelectLanguageMessage();
                     return;
@@ -195,9 +194,9 @@
                 await _transcribeFilesService.TranscribeAsync(files, new SpeechTranscriptionOptionsModel { Language = SelectedLanguage.Locale, UseSingleOutputFile = GenerateSingleFile, OutputDirectory = OpenedFolderPath }, progress, _cts.Token);
 
                 TranscriptionInfoBar = new InfoMessageModel($"Transcription complete!", "Your file(s) are ready.", InfoBarSeverity.Success);
-                CloseSpeechSynthesisInfoBar();
+                var task = CloseSpeechSynthesisInfoBar();
             }
-            catch (OperationCanceledException ex)
+            catch (OperationCanceledException)
             {
                 TranscriptionInfoBar = InformationMessageProvider.GetTranscriptionCanceledMessage();
             }

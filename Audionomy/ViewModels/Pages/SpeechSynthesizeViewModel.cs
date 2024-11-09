@@ -3,7 +3,7 @@
     using Audionomy.BL.DataModels;
     using Audionomy.BL.Extensions;
     using Audionomy.BL.Interfaces;
-    using Audionomy.Providers;
+    using Audionomy.helpers;
     using Audionomy.Models;
     using CommunityToolkit.Mvvm.ComponentModel;
     using CommunityToolkit.Mvvm.Input;
@@ -25,10 +25,9 @@
         private ApplicationSettingsModel _appSettings;
         private UserSettingsModel _userSettings;
         private bool _isInitialized;
-        private string? _lastSelectedFolder;
         private string? _selectedTxtFileName;
         private TempSynthesizedFileModel _tempSynthesizedFile;
-        private IWavePlayer _outputDevice;
+        private WaveOutEvent _outputDevice;
         private AudioFileReader _audioFile;
         private CancellationTokenSource _cts;
 
@@ -255,9 +254,9 @@
                 }
 
                 SynthesisInfoBar = InformationMessageProvider.GetAudioFileGeneratedMessage();
-                CloseSpeechSynthesisInfoBar();
+                var task = CloseSpeechSynthesisInfoBar();
             }
-            catch (OperationCanceledException ex)
+            catch (OperationCanceledException)
             {
                 SynthesisInfoBar = InformationMessageProvider.GetSynthesisCanceledMessage();
             }
@@ -295,7 +294,7 @@
                     return;
                 }
 
-                if (string.IsNullOrEmpty(SelectedLanguage?.Locale))
+                if (SelectedLanguage == null || string.IsNullOrEmpty(SelectedLanguage?.Locale))
                 {
                     SynthesisInfoBar = InformationMessageProvider.GetNoSelectLanguageMessage();
                     return;
@@ -308,7 +307,7 @@
                     {
                         FilePath = Path.GetTempPath() + Guid.NewGuid() + ".wav",
                         Locale = SelectedLanguage.Locale,
-                        Voice = SelectedLanguageStyle?.ShortName,
+                        Voice = SelectedLanguageStyle?.ShortName ?? SelectedLanguage.Voices.First().ShortName,
                         Text = textToSynthesize.Trim(),
                         ConvertToAsteriskFormat = ConvertToAsteriskFormat
                     };
@@ -341,7 +340,7 @@
                     _outputDevice.Play();
                 }
             }
-            catch (OperationCanceledException ex)
+            catch (OperationCanceledException)
             {
                 SynthesisInfoBar = InformationMessageProvider.GetSynthesisCanceledMessage();
             }
@@ -360,13 +359,11 @@
             if (_outputDevice != null)
             {
                 _outputDevice.Dispose();
-                _outputDevice = null;
             }
 
             if (_audioFile != null)
             {
                 _audioFile.Dispose();
-                _audioFile = null;
             }
         }
 

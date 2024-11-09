@@ -1,4 +1,4 @@
-﻿namespace Audionomy.Providers
+﻿namespace Audionomy.helpers
 {
     using Audionomy.ViewModels;
     using Wpf.Ui.Controls;

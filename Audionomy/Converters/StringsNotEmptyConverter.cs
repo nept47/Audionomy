@@ -11,8 +11,8 @@
                 return false;
 
             // Check if both values are non-null strings and have content
-            string firstString = values[0] as string;
-            string secondString = values[1] as string;
+            string? firstString = values[0] as string;
+            string? secondString = values[1] as string;
 
             return !string.IsNullOrEmpty(firstString) && !string.IsNullOrEmpty(secondString);
         }

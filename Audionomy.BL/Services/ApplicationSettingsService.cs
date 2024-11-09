@@ -162,8 +162,9 @@
                 }
             }
             return result ?? [];
-            }catch(Exception ex)
+            }catch(Exception)
             {
+                // TODO: Add logging
                 throw;
             }
         }

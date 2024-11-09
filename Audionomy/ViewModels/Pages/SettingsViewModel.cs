@@ -2,7 +2,7 @@
 {
     using Audionomy.BL.DataModels;
     using Audionomy.BL.Interfaces;
-    using Audionomy.Providers;
+    using Audionomy.helpers;
     using CommunityToolkit.Mvvm.ComponentModel;
     using CommunityToolkit.Mvvm.Input;
     using System.Collections.ObjectModel;
@@ -10,7 +10,6 @@
 
     public partial class SettingsViewModel : ObservableObject, INavigationAware
     {
-        private bool _isInitialized = false;
         private List<VoiceLanguageModel> _allLanguages;
 
         [ObservableProperty]
@@ -64,15 +63,8 @@
                 .Where(x => settings.ActiveLanguages.All(y => y.Locale != x.Locale))
                 .ToList());
             ActiveLanguages = new ObservableCollection<VoiceLanguageModel>(settings.ActiveLanguages);
-            _isInitialized = true;
         }
-
-        private string GetAssemblyVersion()
-        {
-            return System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString()
-                ?? String.Empty;
-        }
-
+              
         [RelayCommand]
         private async Task OnSaveAzureCredentials()
         {
@@ -90,7 +82,7 @@
                 else
                 {
                     AzureInfoBar = InformationMessageProvider.GetCredentialsSavedMessage();
-                    CloseAzureInfoBar();
+                    var task = CloseAzureInfoBar();
                 }
             }
             catch (Exception ex)
