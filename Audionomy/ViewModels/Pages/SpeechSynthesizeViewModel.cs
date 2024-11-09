@@ -391,6 +391,7 @@
             _userSettings.SpeechSynthesisSettings.Language = SelectedLanguage;
             _userSettings.SpeechSynthesisSettings.ConvertToAsteriskFormat = ConvertToAsteriskFormat;
             _userSettings.SpeechSynthesisSettings.Voice = SelectedLanguageStyle;
+
             await _userSettingsService.SaveSettingsAsync(_userSettings);
         }
 

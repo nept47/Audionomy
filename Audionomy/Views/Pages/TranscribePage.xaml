@@ -18,7 +18,11 @@
     <Page.Resources>
         <converters:BooleanNegationConverter
             x:Key="BooleanNegationConverter" />
+        <converters:BooleanInverseVisibilityConvertor
+            x:Key="BooleanInverseVisibilityConvertor" />
+    
     </Page.Resources>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition
@@ -33,67 +37,94 @@
                 Height="Auto" />
         </Grid.RowDefinitions>
 
-        <Grid
-            Grid.Row="0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition
-                    Width="100" />
-                <ColumnDefinition
-                    Width="*" />
-                <ColumnDefinition
-                    Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <ui:Button
-                Grid.Column="0"
-                IsEnabled="{Binding ViewModel.RequiresConfiguration, Converter={StaticResource BooleanNegationConverter}}"
-                Command="{Binding ViewModel.OpenFolderCommand}"
-                Content="Select folder" />
-            <StackPanel
-                Grid.Column="1"
-                Margin="16,0,0,0"
-                VerticalAlignment="Center">
-                <ui:TextBlock
-                    Text="Picked folder"
-                    Visibility="{Binding ViewModel.OpenedFolderPathVisibility}" />
-                <ui:TextBlock
-                    FontTypography="BodyStrong"
-                    Text="{Binding ViewModel.OpenedFolderPath}" />
-            </StackPanel>
-            <StackPanel
-                Grid.Column="2"
-                Margin="16,0,0,0"
-                VerticalAlignment="Center"
-                Visibility="{Binding ViewModel.OpenedFolderPathVisibility}">
-                <ui:TextBlock
-                    Text="Wav files" />
-                <ui:TextBlock HorizontalAlignment="Left"
-                    FontTypography="BodyStrong"
-                    Text="{Binding ViewModel.NumberOfAudioFiles}" />
-            </StackPanel>
-        </Grid>
+        <!--<StackPanel
+            Grid.Row="0"
+            Orientation="Horizontal">
+            <ToggleButton
+                Content="Folder Mode" IsChecked="True" />
+            <ToggleButton
+                Visibility="Collapsed"
+                Content="File Mode"
+                Margin="10,0,0,0" />
+
+        </StackPanel>-->
 
         <Grid
             Grid.Row="1"
-            Margin="0,15,0,0">
+            Margin="10,0,0,0">
+            <Grid.RowDefinitions>
+                <RowDefinition />
+                <RowDefinition />
+                <RowDefinition />
+                <RowDefinition />
+                <RowDefinition />
+            </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition
-                    Width="100" />
+                    Width="110" />
                 <ColumnDefinition
                     Width="*" />
                 <ColumnDefinition
                     Width="Auto" />
             </Grid.ColumnDefinitions>
-            <Border
-                Grid.Column="0">
-                <ui:TextBlock
-                    FontSize="{DynamicResourceExtension ControlContentThemeFontSize}"
-                    VerticalAlignment="Center"
-                    Text="Language"
-                    Padding="11,5,11,6" />
-            </Border>
-            <ComboBox
+
+            <ui:TextBlock
+                Grid.Row="0"
+                Grid.Column="0"
+                FontSize="{DynamicResourceExtension ControlContentThemeFontSize}"
+                VerticalAlignment="Center"
+                Text="Folder" />
+
+            <ui:TextBox
+                Grid.Row="0"
                 Grid.Column="1"
-                Margin="16,0,0,0"
+                Margin="0,0,0,0"
+                FontSize="{DynamicResourceExtension ControlContentThemeFontSize}"
+                VerticalAlignment="Center"
+                PlaceholderText="Select folder..."
+                Text="{Binding ViewModel.OpenedFolderPath}"
+                IsReadOnly="True"
+                IsEnabled="False" />
+
+            <ui:Button
+                Grid.Row="0"
+                Grid.Column="2"
+                Margin="10,0,0,0"
+                IsEnabled="{Binding ViewModel.RequiresConfiguration, Converter={StaticResource BooleanNegationConverter}}"
+                Command="{Binding ViewModel.OpenFolderCommand}"
+                ToolTipService.ToolTip="Select folder"
+                VerticalAlignment="Stretch"
+                Icon="{ui:SymbolIcon Symbol=FolderOpen20, Filled=True}" />
+
+            <ui:TextBlock
+                Grid.Row="1"
+                Grid.Column="0"
+                Margin="0,15,0,0"
+                FontSize="{DynamicResourceExtension ControlContentThemeFontSize}"
+                VerticalAlignment="Center"
+                Text="Wav files" />
+
+            <ui:TextBlock
+                Grid.Row="1"
+                Grid.Column="1"
+                Margin="5,15,0,0"
+                VerticalAlignment="Center"
+                Visibility="{Binding ViewModel.OpenedFolderPathVisibility}"
+                HorizontalAlignment="Left"
+                FontTypography="BodyStrong"
+                Text="{Binding ViewModel.NumberOfAudioFiles}" />
+
+            <ui:TextBlock
+                Grid.Row="2"
+                Grid.Column="0"
+                Margin="0,15,0,0"
+                FontSize="{DynamicResourceExtension ControlContentThemeFontSize}"
+                VerticalAlignment="Center"
+                Text="Language" />
+            <ComboBox
+                Grid.Row="2"
+                Grid.Column="1"
+                Margin="0,15,0,0"
                 IsEnabled="{Binding ViewModel.RequiresConfiguration, Converter={StaticResource BooleanNegationConverter}}"
                 HorizontalAlignment="Left"
                 MinWidth="300px"
@@ -107,34 +138,57 @@
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
             </ComboBox>
-        </Grid>
 
-        <Grid
-            Grid.Row="2"
-            Margin="0,15,0,0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition
-                    Width="100" />
-                <ColumnDefinition
-                    Width="*" />
-            </Grid.ColumnDefinitions>
-            <Border
-                Grid.Column="0">
-                <ui:TextBlock
-                    FontSize="{DynamicResourceExtension ControlContentThemeFontSize}"
-                    VerticalAlignment="Center"
-                    Text="Single file"
-                    Padding="11,5,11,6" />
-            </Border>
-            <CheckBox
-                IsEnabled="{Binding ViewModel.RequiresConfiguration, Converter={StaticResource BooleanNegationConverter}}"
+            <ui:TextBlock
+                Grid.Row="3"
+                Grid.Column="0"
+                Margin="0,15,0,0"
+                FontSize="{DynamicResourceExtension ControlContentThemeFontSize}"
+                VerticalAlignment="Center"
+                Text="Single file" />
+
+            <ui:ToggleSwitch
+                Grid.Row="3"
                 Grid.Column="1"
-                Margin="16,0,0,0"
-                Grid.Row="2"
-                IsChecked="{Binding ViewModel.GenerateSingleFile, Mode=TwoWay}" />
-        </Grid>
-        
+                Margin="0,17,0,0"
+                IsEnabled="{Binding ViewModel.RequiresConfiguration, Converter={StaticResource BooleanNegationConverter}}"
+                VerticalAlignment="Center"
+                FlowDirection="LeftToRight"
+                IsChecked="{Binding ViewModel.GenerateSingleFile, Mode=TwoWay }" />
 
+            <ui:TextBlock
+                Grid.Row="4"
+                Grid.Column="0"
+                Margin="0,15,0,0"
+                Visibility="{Binding ViewModel.GenerateSingleFile, Converter={StaticResource BooleanInverseVisibilityConvertor}}"
+                FontSize="{DynamicResourceExtension ControlContentThemeFontSize}"
+                VerticalAlignment="Center"
+                Text="Output Folder" />
+
+            <ui:TextBox
+                Grid.Row="4"
+                Grid.Column="1"
+                Margin="0,15,0,0"
+                Visibility="{Binding ViewModel.GenerateSingleFile, Converter={StaticResource BooleanInverseVisibilityConvertor}}"
+                FontSize="{DynamicResourceExtension ControlContentThemeFontSize}"
+                VerticalAlignment="Center"
+                PlaceholderText="Select folder..."
+                Text="{Binding ViewModel.OutputFolderPath}"
+                IsReadOnly="True"
+                IsEnabled="False" />
+
+            <ui:Button
+                Grid.Row="4"
+                Grid.Column="2"
+                Margin="10,15,0,0"
+                Visibility="{Binding ViewModel.GenerateSingleFile, Converter={StaticResource BooleanInverseVisibilityConvertor}}"
+                IsEnabled="{Binding ViewModel.RequiresConfiguration, Converter={StaticResource BooleanNegationConverter}}"
+                Command="{Binding ViewModel.OpenOutputFolderCommand}"
+                ToolTipService.ToolTip="Select folder"
+                VerticalAlignment="Stretch"
+                Icon="{ui:SymbolIcon Symbol=FolderOpen20, Filled=True}" />
+
+        </Grid>
         <ui:InfoBar
             Grid.Row="3"
             Title="{Binding ViewModel.TranscriptionInfoBar.Title}"
