@@ -97,13 +97,13 @@
             RequiresConfiguration = _appSettings.RequiresConfiguration();
             if (RequiresConfiguration)
             {
-                SynthesisInfoBar = new InfoMessageModel("Azure credentials are required", "Please configure them before proceeding.", InfoBarSeverity.Informational, false);
+                SynthesisInfoBar = new InfoMessageModel("Azure credentials are required", "Please configure them before proceeding.", InfoBarSeverity.Warning, false);
                 return;
             }
             else if (_appSettings.ActiveLanguages.Count == 0)
             {
                 RequiresConfiguration = true;
-                SynthesisInfoBar = new InfoMessageModel("No active languages selected", "Please go to Settings > Active Languages to choose your preferred languages.", InfoBarSeverity.Informational, false);
+                SynthesisInfoBar = new InfoMessageModel("No active languages selected", "Please go to Settings > Active Languages to choose your preferred languages.", InfoBarSeverity.Warning, false);
                 return;
             }
             else
