@@ -29,8 +29,10 @@
         private TempSynthesizedFileModel _tempSynthesizedFile;
         private IWavePlayer _outputDevice;
         private AudioFileReader _audioFile;
+        private CancellationTokenSource _cts;
 
-        CancellationTokenSource _cts;
+        [ObservableProperty]
+        private bool _requiresConfiguration = false;
 
         [ObservableProperty]
         private string _sourceFolder = String.Empty;
@@ -91,6 +93,26 @@
         public async void OnNavigatedTo()
         {
             _appSettings = await _applicationSettingsService.LoadSettingsAsync();
+
+            RequiresConfiguration = _appSettings.RequiresConfiguration();
+            if (RequiresConfiguration)
+            {
+                SynthesisInfoBar = new InfoMessageModel("Azure credentials are required", "Please configure them before proceeding.", InfoBarSeverity.Informational, false);
+                return;
+            }
+            else if (_appSettings.ActiveLanguages.Count == 0)
+            {
+                RequiresConfiguration = true;
+                SynthesisInfoBar = new InfoMessageModel("No active languages selected", "Please go to Settings > Active Languages to choose your preferred languages.", InfoBarSeverity.Informational, false);
+                return;
+            }
+            else
+            {
+                SynthesisInfoBar = new InfoMessageModel();
+            }
+
+
+
             ComboBoxLanguages = new ObservableCollection<VoiceLanguageModel>(_appSettings.ActiveLanguages);
             _userSettings = await _userSettingsService.LoadSettingsAsync();
             SelectedLanguageIndex = ComboBoxLanguages.Select((language, index) => new { Language = language, Index = index })
@@ -380,7 +402,7 @@
 
         private async Task CloseSpeechSynthesisInfoBar()
         {
-            await Task.Delay(1000);
+            await Task.Delay(5000);
             SynthesisInfoBar = new InfoMessageModel();
         }
     }

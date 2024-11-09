@@ -23,7 +23,10 @@
         private ApplicationSettingsModel _appSettings;
         private UserSettingsModel _userSettings;
         private bool _isInitialized;
-        CancellationTokenSource _cts;
+        private CancellationTokenSource _cts;
+
+        [ObservableProperty]
+        private bool _requiresConfiguration = false;
 
         [ObservableProperty]
         private Visibility _openedFolderPathVisibility = Visibility.Hidden;
@@ -77,6 +80,25 @@
         public async void OnNavigatedTo()
         {
             _appSettings = await _applicationSettingsService.LoadSettingsAsync();
+            RequiresConfiguration = _appSettings.RequiresConfiguration();
+            if (RequiresConfiguration)
+            {
+                TranscriptionInfoBar = new InfoMessageModel("Azure credentials are required", "Please configure them before proceeding.", InfoBarSeverity.Informational, false);
+                return;
+            }
+            else if (_appSettings.ActiveLanguages.Count == 0)
+            {
+                RequiresConfiguration = true;
+                TranscriptionInfoBar = new InfoMessageModel("No active languages selected", "Please go to Settings > Active Languages to choose your preferred languages.", InfoBarSeverity.Informational, false);
+                return;
+            }
+            else
+            {
+                TranscriptionInfoBar = new InfoMessageModel();
+            }
+
+
+
             ComboBoxLanguages = new ObservableCollection<VoiceLanguageModel>(_appSettings.ActiveLanguages);
             _userSettings = await _userSettingsService.LoadSettingsAsync();
             await Task.Delay(3000);
@@ -172,7 +194,7 @@
 
                 await _transcribeFilesService.TranscribeAsync(files, new SpeechTranscriptionOptionsModel { Language = SelectedLanguage.Locale, UseSingleOutputFile = GenerateSingleFile, OutputDirectory = OpenedFolderPath }, progress, _cts.Token);
 
-                TranscriptionInfoBar = new InfoMessageModel($"Transcription complete! Your file(s) are ready.", InfoBarSeverity.Success);
+                TranscriptionInfoBar = new InfoMessageModel($"Transcription complete!", "Your file(s) are ready.", InfoBarSeverity.Success);
                 CloseSpeechSynthesisInfoBar();
             }
             catch (OperationCanceledException ex)
@@ -200,7 +222,7 @@
 
         private async Task CloseSpeechSynthesisInfoBar()
         {
-            await Task.Delay(1000);
+            await Task.Delay(5000);
             TranscriptionInfoBar = new InfoMessageModel();
         }
     }
