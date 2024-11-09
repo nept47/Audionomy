@@ -2,6 +2,7 @@
 {
     using Audionomy.BL.DataModels;
     using Audionomy.BL.Interfaces;
+    using Audionomy.helpers;
     using CommunityToolkit.Mvvm.ComponentModel;
     using CommunityToolkit.Mvvm.Input;
     using System.Collections.ObjectModel;
@@ -9,7 +10,6 @@
 
     public partial class SettingsViewModel : ObservableObject, INavigationAware
     {
-        private bool _isInitialized = false;
         private List<VoiceLanguageModel> _allLanguages;
 
         [ObservableProperty]
@@ -50,7 +50,7 @@
             var settings = await _applicationSettingsService.LoadSettingsAsync();
             if (settings.ActiveLanguages.Count == 0)
             {
-                AzureInfoBar = new InfoMessageModel("No active languages selected. Please go to the Active Languages tab to choose your preferred languages", InfoBarSeverity.Warning, false);
+                AzureInfoBar = InformationMessageProvider.GetNoLanguagesSelectedOnSettingMessage();
             }
 
             AzureSpeechServiceKey = settings.Key;
@@ -63,15 +63,8 @@
                 .Where(x => settings.ActiveLanguages.All(y => y.Locale != x.Locale))
                 .ToList());
             ActiveLanguages = new ObservableCollection<VoiceLanguageModel>(settings.ActiveLanguages);
-            _isInitialized = true;
         }
-
-        private string GetAssemblyVersion()
-        {
-            return System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString()
-                ?? String.Empty;
-        }
-
+              
         [RelayCommand]
         private async Task OnSaveAzureCredentials()
         {
@@ -84,17 +77,17 @@
 
                 if (settings.ActiveLanguages.Count == 0)
                 {
-                    AzureInfoBar = new InfoMessageModel("Azure credentials saved", "Now, please select your active languages in the next tab to start using the application.", InfoBarSeverity.Warning, false);
+                    AzureInfoBar = InformationMessageProvider.GetCredentialsSavedNextStepMessage();
                 }
                 else
                 {
-                    AzureInfoBar = new InfoMessageModel("Credentials saved succesfully.", InfoBarSeverity.Success, false);
-                    CloseAzureInfoBar();
+                    AzureInfoBar = InformationMessageProvider.GetCredentialsSavedMessage();
+                    var task = CloseAzureInfoBar();
                 }
             }
             catch (Exception ex)
             {
-                AzureInfoBar = new InfoMessageModel(ex.Message, InfoBarSeverity.Error);
+                AzureInfoBar = InformationMessageProvider.GetGenericErrorMessage(ex.Message);
             }
         }
 
@@ -119,7 +112,7 @@
                 AvailableLanguages = new ObservableCollection<VoiceLanguageModel>(AvailableLanguages.OrderBy(x => x.Description));
                 ActiveLanguages = new ObservableCollection<VoiceLanguageModel>(ActiveLanguages.OrderBy(x => x.Description));
                 AzureInfoBar = ActiveLanguages.Count == 0
-            ? new InfoMessageModel("No active languages selected", "Please go to the Active Languages tab to choose your preferred languages", InfoBarSeverity.Warning, false)
+            ? InformationMessageProvider.GetNoLanguagesSelectedOnSettingMessage()
             : new InfoMessageModel();
                 await _applicationSettingsService.SaveActiveLanguagesAsync(ActiveLanguages.ToList());
             }
@@ -131,7 +124,7 @@
             ActiveLanguages = new ObservableCollection<VoiceLanguageModel>();
             AvailableLanguages = new ObservableCollection<VoiceLanguageModel>(_allLanguages);
             AzureInfoBar = ActiveLanguages.Count == 0
-                ? new InfoMessageModel("No active languages selected", "No active languages selected. Please go to the Active Languages tab to choose your preferred languages", InfoBarSeverity.Warning, false)
+                ? InformationMessageProvider.GetNoLanguagesSelectedOnSettingMessage()
                 : new InfoMessageModel();
             await _applicationSettingsService.SaveActiveLanguagesAsync(ActiveLanguages.ToList());
         }

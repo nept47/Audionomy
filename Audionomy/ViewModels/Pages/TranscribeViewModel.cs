@@ -2,6 +2,7 @@
 {
     using Audionomy.BL.DataModels;
     using Audionomy.BL.Interfaces;
+    using Audionomy.helpers;
     using Audionomy.Services;
     using CommunityToolkit.Mvvm.ComponentModel;
     using CommunityToolkit.Mvvm.Input;
@@ -22,7 +23,6 @@
         private readonly INavigationWindow _navigationWindow;
         private ApplicationSettingsModel _appSettings;
         private UserSettingsModel _userSettings;
-        private bool _isInitialized;
         private CancellationTokenSource _cts;
 
         [ObservableProperty]
@@ -75,29 +75,28 @@
             _navigationWindow = (_serviceProvider.GetService(typeof(INavigationWindow)) as INavigationWindow)!;
         }
 
-        public async void OnNavigatedFrom() { }
+        public void OnNavigatedFrom() { }
 
         public async void OnNavigatedTo()
         {
             _appSettings = await _applicationSettingsService.LoadSettingsAsync();
+
             RequiresConfiguration = _appSettings.RequiresConfiguration();
             if (RequiresConfiguration)
             {
-                TranscriptionInfoBar = new InfoMessageModel("Azure credentials are required", "Please configure them before proceeding.", InfoBarSeverity.Warning, false);
+                TranscriptionInfoBar = InformationMessageProvider.GetMissingCredentialsMessage();
                 return;
             }
             else if (_appSettings.ActiveLanguages.Count == 0)
             {
                 RequiresConfiguration = true;
-                TranscriptionInfoBar = new InfoMessageModel("No active languages selected", "Please go to Settings > Active Languages to choose your preferred languages.", InfoBarSeverity.Warning, false);
+                TranscriptionInfoBar = InformationMessageProvider.GetNoLanguagesSelectedMessage();
                 return;
             }
             else
             {
                 TranscriptionInfoBar = new InfoMessageModel();
             }
-
-
 
             ComboBoxLanguages = new ObservableCollection<VoiceLanguageModel>(_appSettings.ActiveLanguages);
             _userSettings = await _userSettingsService.LoadSettingsAsync();
@@ -126,7 +125,7 @@
 
             if (openFolderDialog.FolderNames.Length == 0)
             {
-                OpenedFolderPath = null;
+                OpenedFolderPath = string.Empty;
                 return;
             }
 
@@ -156,13 +155,13 @@
 
                 if (string.IsNullOrEmpty(OpenedFolderPath))
                 {
-                    TranscriptionInfoBar = new InfoMessageModel("Folder is not selected.", InfoBarSeverity.Warning);
+                    TranscriptionInfoBar = InformationMessageProvider.GetFolderNotSelectedMessage();
                     return;
                 }
 
-                if (string.IsNullOrEmpty(SelectedLanguage.Locale))
+                if (string.IsNullOrEmpty(SelectedLanguage?.Locale))
                 {
-                    TranscriptionInfoBar = new InfoMessageModel("Please select a language.", InfoBarSeverity.Warning);
+                    TranscriptionInfoBar = InformationMessageProvider.GetNoSelectLanguageMessage();
                     return;
                 }
 
@@ -171,7 +170,7 @@
 
                 if (_audioFileCountingService.ValidWavFiles(OpenedFolderPath) == 0)
                 {
-                    TranscriptionInfoBar = new InfoMessageModel("There are not wav files in the selected folder.", InfoBarSeverity.Warning);
+                    TranscriptionInfoBar = InformationMessageProvider.GetNoWavFilesInFolderMessage();
                     return;
                 }
 
@@ -195,15 +194,15 @@
                 await _transcribeFilesService.TranscribeAsync(files, new SpeechTranscriptionOptionsModel { Language = SelectedLanguage.Locale, UseSingleOutputFile = GenerateSingleFile, OutputDirectory = OpenedFolderPath }, progress, _cts.Token);
 
                 TranscriptionInfoBar = new InfoMessageModel($"Transcription complete!", "Your file(s) are ready.", InfoBarSeverity.Success);
-                CloseSpeechSynthesisInfoBar();
+                var task = CloseSpeechSynthesisInfoBar();
             }
-            catch (OperationCanceledException ex)
+            catch (OperationCanceledException)
             {
-                TranscriptionInfoBar = new InfoMessageModel(ex.Message, InfoBarSeverity.Warning);
+                TranscriptionInfoBar = InformationMessageProvider.GetTranscriptionCanceledMessage();
             }
             catch (Exception ex)
             {
-                TranscriptionInfoBar = new InfoMessageModel(ex.Message, InfoBarSeverity.Error);
+                TranscriptionInfoBar = InformationMessageProvider.GetGenericErrorMessage(ex.Message);
             }
             finally
             {

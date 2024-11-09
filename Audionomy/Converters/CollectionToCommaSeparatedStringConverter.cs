@@ -1,4 +1,4 @@
-﻿namespace Audionomy.Helpers
+﻿namespace Audionomy.Converters
 {
     using System.Globalization;
     using System.Windows.Data;
