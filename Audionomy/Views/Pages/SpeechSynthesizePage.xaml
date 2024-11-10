@@ -88,7 +88,6 @@
             IsEnabled="{Binding ViewModel.RequiresConfiguration, Converter={StaticResource BooleanNegationConverter}}"
             HorizontalAlignment="Left"
             MinWidth="250px"
-            SelectionChanged="LanguageComboBox_SelectionChanged"
             SelectedItem="{Binding ViewModel.SelectedLanguage, Mode=TwoWay}"
             SelectedIndex="{Binding ViewModel.SelectedLanguageIndex, Mode=TwoWay}"
             ItemsSource="{Binding ViewModel.ComboBoxLanguages, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:SpeechSynthesizePage}, Mode=OneWay}">
@@ -111,7 +110,6 @@
             VerticalAlignment="Stretch"
             ToolTipService.ToolTip="Listen the text"
             Command="{Binding ViewModel.GenerateTmpFileCommand, Mode=OneWay}"
-            Visibility="{Binding ViewModel.ShowTranscribe, Mode=OneWay}"
             Icon="{ui:SymbolIcon Symbol=Speaker216, Filled=True}" />
         <ui:TextBlock
             Grid.Row="3"
@@ -128,7 +126,6 @@
             HorizontalAlignment="Left"
             MinWidth="250px"
             SelectedItem="{Binding ViewModel.SelectedLanguageStyle, Mode=TwoWay}"
-            SelectedIndex="{Binding ViewModel.SelectedLanguageStyleIndex, Mode=TwoWay}"
             ItemsSource="{Binding ViewModel.SelectedLanguage.Voices, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=local:SpeechSynthesizePage}, Mode=OneWay}">
         </ComboBox>
         <ui:TextBlock

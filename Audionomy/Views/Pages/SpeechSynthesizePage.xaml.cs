@@ -18,10 +18,5 @@
         }
 
         public SpeechSynthesizeViewModel ViewModel { get; }
-
-        private void LanguageComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            ViewModel.SelectedLanguageStyleIndex = 0;
-        }
     }
 }
