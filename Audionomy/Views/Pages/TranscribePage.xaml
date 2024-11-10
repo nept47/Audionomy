@@ -44,9 +44,9 @@
             <ToggleButton
                 Content="Folder Mode" IsChecked="True" />
             <ToggleButton
-                Visibility="Collapsed"
+                
                 Content="File Mode"
-                Margin="10,0,0,0" />
+                Margin="10,0,0,10" />
 
         </StackPanel>-->
 
@@ -97,35 +97,40 @@
                 VerticalAlignment="Stretch"
                 Icon="{ui:SymbolIcon Symbol=FolderOpen20, Filled=True}" />
 
-            <ui:TextBlock
-                Grid.Row="1"
-                Grid.Column="0"
-                Margin="0,15,0,0"
-                FontSize="{DynamicResourceExtension ControlContentThemeFontSize}"
-                VerticalAlignment="Center"
-                Text="Wav files" />
-
-            <ui:TextBlock
+            <StackPanel
                 Grid.Row="1"
                 Grid.Column="1"
-                Margin="5,15,0,0"
-                VerticalAlignment="Center"
-                Visibility="{Binding ViewModel.OpenedFolderPathVisibility}"
-                HorizontalAlignment="Left"
-                FontTypography="BodyStrong"
-                Text="{Binding ViewModel.NumberOfAudioFiles}" />
+                Margin="5,5,0,0"
+                Orientation="Horizontal">
+
+                <ui:TextBlock
+                    Visibility="{Binding ViewModel.OpenedFolderPathVisibility}"
+                    VerticalAlignment="Center"
+                    FontTypography="Caption"
+                    Text="Wav files found" />
+
+                <ui:TextBlock
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    Margin="7,0,0,0"
+                    Visibility="{Binding ViewModel.OpenedFolderPathVisibility}"
+                    HorizontalAlignment="Left"
+                    FontTypography="Caption"
+                    Text="{Binding ViewModel.NumberOfAudioFiles}" />
+
+            </StackPanel>
 
             <ui:TextBlock
                 Grid.Row="2"
                 Grid.Column="0"
-                Margin="0,15,0,0"
+                Margin="0,20,0,0"
                 FontSize="{DynamicResourceExtension ControlContentThemeFontSize}"
                 VerticalAlignment="Center"
                 Text="Language" />
             <ComboBox
                 Grid.Row="2"
                 Grid.Column="1"
-                Margin="0,15,0,0"
+                Margin="0,25,0,0"
                 IsEnabled="{Binding ViewModel.RequiresConfiguration, Converter={StaticResource BooleanNegationConverter}}"
                 HorizontalAlignment="Left"
                 MinWidth="300px"
@@ -207,7 +212,7 @@
                 VerticalAlignment="Center"
                 PlaceholderText="Select file..."
                 Text="{Binding ViewModel.OutputFilePath}"
-                ToolTipService.ToolTip="{Binding ViewModel.OutputFilePath}" 
+                ToolTipService.ToolTip="{Binding ViewModel.OutputFilePath}"
                 IsReadOnly="True"
                 IsEnabled="False" />
 

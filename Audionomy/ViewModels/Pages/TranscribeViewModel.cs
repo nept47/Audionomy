@@ -141,6 +141,10 @@
             {
                 OutputFolderPath = string.Join("\n", openFolderDialog.FolderNames);
             }
+            if (string.IsNullOrEmpty(OutputFilePath))
+            {
+                OutputFilePath = openFolderDialog.FolderName + $"\\Transcription_{SelectedLanguage?.Locale}_{DateTime.Now:yyyyMMddHHmm}.txt";
+            }
         }
 
         [RelayCommand]

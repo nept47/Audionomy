@@ -13,6 +13,7 @@
     using System.IO;
     using System.Windows.Automation;
     using Wpf.Ui;
+    using Wpf.Ui.Appearance;
     using Wpf.Ui.Controls;
 
     public partial class SpeechSynthesizeViewModel : ObservableObject, INavigationAware
@@ -66,9 +67,6 @@
 
         [ObservableProperty]
         private int _selectedLanguageIndex = 0;
-
-        [ObservableProperty]
-        private int _selectedLanguageStyleIndex = 0;
 
         public SpeechSynthesizeViewModel(
            IUserSettingsService userSettingsService,
@@ -351,6 +349,14 @@
             finally
             {
                 Progress = new ProgressViewModel();
+            }
+        }
+
+        partial void OnSelectedLanguageChanged(VoiceLanguageModel? oldValue, VoiceLanguageModel? newValue)
+        {
+            if (newValue != null)
+            {
+                SelectedLanguageStyle = newValue.Voices.FirstOrDefault();
             }
         }
 
