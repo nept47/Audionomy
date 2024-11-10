@@ -34,7 +34,6 @@
                 throw new ArgumentException("Input file list must contain at least one .wav file.", nameof(wavFiles));
             }
 
-
             var settings = await _settingsService.LoadSettingsAsync();
             var speechConfig = SpeechConfig.FromSubscription(settings.Key, settings.Region);
             speechConfig.SpeechRecognitionLanguage = options.Language;
@@ -45,7 +44,7 @@
             if (options.UseSingleOutputFile)
             {
                 var outputFile = string.IsNullOrEmpty(options.OutputFileName)
-                ? $"Transcription_{DateTime.Now:yyyyMMddHHmmssfff}.txt"
+                ? $"Transcription_{options.Language}_{DateTime.Now:yyyyMMddHHmmssfff}.txt"
                 : options.OutputFileName.EndsWith(".txt", StringComparison.OrdinalIgnoreCase)
                 ? options.OutputFileName
                 : $"{options.OutputFileName}.txt";
@@ -88,7 +87,7 @@
 
                     await Task.Delay(500, cancellationToken);
 
-                    var outputPath = Path.Combine(options.OutputDirectory, $"{Path.GetFileNameWithoutExtension(file.Name)}.txt");
+                    var outputPath = Path.Combine(options.OutputDirectory, $"{Path.GetFileNameWithoutExtension(file.Name)}_{options.Language}.txt");
 
                     await using var streamWriter = new StreamWriter(outputPath, false);
                     await streamWriter.WriteLineAsync(text);

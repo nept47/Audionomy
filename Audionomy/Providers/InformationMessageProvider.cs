@@ -122,6 +122,14 @@
                 InfoBarSeverity.Warning);
         }
 
+        public static InfoMessageModel GetNoSelectOutputFileMessage()
+        {
+            return new InfoMessageModel(
+                "Output File Required",
+                "Please select an output file to continue.",
+                InfoBarSeverity.Warning);
+        }
+
         public static InfoMessageModel GetNoWavFilesInFolderMessage()
         {
             return new InfoMessageModel(

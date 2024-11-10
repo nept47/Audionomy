@@ -1,6 +1,7 @@
 ﻿namespace Audionomy.ViewModels.Pages
 {
     using Audionomy.BL.DataModels;
+    using Audionomy.BL.Extensions;
     using Audionomy.BL.Interfaces;
     using Audionomy.helpers;
     using Audionomy.Services;
@@ -20,7 +21,6 @@
         private readonly IUserSettingsService _userSettingsService;
         private readonly ITranscribeFilesService _transcribeFilesService;
         private readonly IServiceProvider _serviceProvider;
-        private readonly INavigationWindow _navigationWindow;
         private ApplicationSettingsModel _appSettings;
         private UserSettingsModel _userSettings;
         private CancellationTokenSource _cts;
@@ -33,6 +33,12 @@
 
         [ObservableProperty]
         private string _openedFolderPath = string.Empty;
+
+        [ObservableProperty]
+        private string _outputFolderPath = string.Empty;
+
+        [ObservableProperty]
+        private string _outputFilePath = string.Empty;
 
         [ObservableProperty]
         private VoiceLanguageModel? _selectedLanguage = new VoiceLanguageModel();
@@ -72,7 +78,6 @@
             _userSettingsService = userSettingsService;
             _transcribeFilesService = transcribeFilesService;
             _serviceProvider = serviceProvider;
-            _navigationWindow = (_serviceProvider.GetService(typeof(INavigationWindow)) as INavigationWindow)!;
         }
 
         public void OnNavigatedFrom() { }
@@ -100,7 +105,7 @@
 
             ComboBoxLanguages = new ObservableCollection<VoiceLanguageModel>(_appSettings.ActiveLanguages);
             _userSettings = await _userSettingsService.LoadSettingsAsync();
-            
+
             SelectedLanguageIndex = ComboBoxLanguages.Select((language, index) => new { Language = language, Index = index })
                 .FirstOrDefault(x => x.Language.Locale == _userSettings.TranscriptionSettings?.Language?.Locale)?.Index ?? 0;
             GenerateSingleFile = _userSettings.TranscriptionSettings.IsSigleFileExportMode;
@@ -132,6 +137,60 @@
             NumberOfAudioFiles = _audioFileCountingService.ValidWavFiles(openFolderDialog.FolderNames[0]).ToString("D0");
             OpenedFolderPathVisibility = Visibility.Visible;
             OpenedFolderPath = string.Join("\n", openFolderDialog.FolderNames);
+            if (string.IsNullOrEmpty(OutputFolderPath))
+            {
+                OutputFolderPath = string.Join("\n", openFolderDialog.FolderNames);
+            }
+        }
+
+        [RelayCommand]
+        public void OpenOutputFolder()
+        {
+            TranscriptionInfoBar = new InfoMessageModel();
+            Progress = new ProgressViewModel();
+
+            OpenFolderDialog openFolderDialog = new()
+            {
+                Multiselect = false,
+                InitialDirectory = OpenedFolderPath ?? (_userSettings.TranscriptionSettings.OpenFolderPath ?? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments))
+            };
+
+            if (openFolderDialog.ShowDialog() != true)
+            {
+                return;
+            }
+
+            if (openFolderDialog.FolderNames.Length == 0)
+            {
+                OpenedFolderPath = string.Empty;
+                return;
+            }
+
+            NumberOfAudioFiles = _audioFileCountingService.ValidWavFiles(openFolderDialog.FolderNames[0]).ToString("D0");
+            OutputFolderPath = string.Join("\n", openFolderDialog.FolderNames);
+        }               
+        
+        [RelayCommand]
+        public void OpenOutputFile()
+        {
+            TranscriptionInfoBar = new InfoMessageModel();
+            Progress = new ProgressViewModel();
+
+            SaveFileDialog saveFileDialog = new()
+            {
+                FileName = $"Transcription_{SelectedLanguage?.Locale}_{DateTime.Now:yyyyMMddHHmm}.txt",
+                DefaultExt = "txt",
+                Filter = "Text File(*.txt)|*.txt",
+                AddExtension = false,
+                InitialDirectory = OutputFolderPath,
+            };
+
+            if (saveFileDialog.ShowDialog() != true)
+            {
+                return;
+            }
+
+            OutputFilePath = saveFileDialog.FileName;
         }
 
         [RelayCommand]
@@ -141,59 +200,48 @@
             {
                 TranscriptionInfoBar = new InfoMessageModel();
 
-                _userSettings.TranscriptionSettings.IsSigleFileExportMode = GenerateSingleFile;
-                _userSettings.TranscriptionSettings.OpenFolderPath = OpenedFolderPath;
-                _userSettings.TranscriptionSettings.Language = SelectedLanguage;
+                await SaveUserSelectionsAsync();
 
-                await _userSettingsService.SaveSettingsAsync(_userSettings);
-
-                if (string.IsNullOrEmpty(_appSettings.Key) || string.IsNullOrEmpty(_appSettings.Region))
+                if (!ValidateUserSelectiona())
                 {
-                    _navigationWindow.Navigate(typeof(Views.Pages.SettingsPage));
                     return;
                 }
 
-                if (string.IsNullOrEmpty(OpenedFolderPath))
+                var outputdirectory = OutputFolderPath;
+                var outputFielName = $"Transcription_{SelectedLanguage?.Locale}_{DateTime.Now:yyyyMMddHHmm}.txt";
+                if (GenerateSingleFile)
                 {
-                    TranscriptionInfoBar = InformationMessageProvider.GetFolderNotSelectedMessage();
-                    return;
+                    outputdirectory = OutputFilePath.GetFolderName();
+                    outputFielName = OutputFilePath.GetFilename();
                 }
 
-                if (string.IsNullOrEmpty(SelectedLanguage?.Locale))
-                {
-                    TranscriptionInfoBar = InformationMessageProvider.GetNoSelectLanguageMessage();
-                    return;
-                }
+
+              
+
+
+                ShowTranscribe = Visibility.Hidden;
+                ShowCancelTranscribe = Visibility.Visible;
 
                 var dir = new DirectoryInfo(OpenedFolderPath);
                 var files = dir.GetFiles().ToList();
 
-                if (_audioFileCountingService.ValidWavFiles(OpenedFolderPath) == 0)
-                {
-                    TranscriptionInfoBar = InformationMessageProvider.GetNoWavFilesInFolderMessage();
-                    return;
-                }
-
-                ShowTranscribe = Visibility.Hidden;
-                ShowCancelTranscribe = Visibility.Visible;
-                var progress = new Progress<TranscriptionResultModel>(result =>
-                {
-                    if (result.Completed)
-                    {
-                        Progress = new ProgressViewModel(result.TotalFileCount, result.TranscribedFileCount, $"{result.FilePath}", string.Empty);
-                    }
-                    else
-                    {
-                        Progress = new ProgressViewModel(result.TotalFileCount, result.TranscribedFileCount, $"Transcribing... {result.FilePath}", $"{result.TranscribedFileCount}/{result.TotalFileCount}");
-                    }
-                });
-
-
                 _cts = new CancellationTokenSource();
 
-                await _transcribeFilesService.TranscribeAsync(files, new SpeechTranscriptionOptionsModel { Language = SelectedLanguage.Locale, UseSingleOutputFile = GenerateSingleFile, OutputDirectory = OpenedFolderPath }, progress, _cts.Token);
+                await _transcribeFilesService.TranscribeAsync(
+                    files,
+                    new SpeechTranscriptionOptionsModel
+                    {
+                        Language = SelectedLanguage!.Locale,
+                        UseSingleOutputFile = GenerateSingleFile,
+                        OutputDirectory = outputdirectory,
+                        OutputFileName = outputFielName
+
+                    },
+                    CreateTranscriptionProgressHandler(),
+                    _cts.Token);
 
                 TranscriptionInfoBar = new InfoMessageModel($"Transcription complete!", "Your file(s) are ready.", InfoBarSeverity.Success);
+
                 var task = CloseSpeechSynthesisInfoBar();
             }
             catch (OperationCanceledException)
@@ -210,6 +258,59 @@
                 ShowTranscribe = Visibility.Visible;
                 ShowCancelTranscribe = Visibility.Hidden;
             }
+        }
+
+        private Progress<TranscriptionResultModel> CreateTranscriptionProgressHandler()
+        {
+            return new Progress<TranscriptionResultModel>(result =>
+            {
+                if (result.Completed)
+                {
+                    Progress = new ProgressViewModel(result.TotalFileCount, result.TranscribedFileCount, $"{result.FilePath}", string.Empty);
+                }
+                else
+                {
+                    Progress = new ProgressViewModel(result.TotalFileCount, result.TranscribedFileCount, $"Transcribing... {result.FilePath}", $"{result.TranscribedFileCount}/{result.TotalFileCount}");
+                }
+            });
+        }
+
+        private bool ValidateUserSelectiona()
+        {
+            if (string.IsNullOrEmpty(OpenedFolderPath))
+            {
+                TranscriptionInfoBar = InformationMessageProvider.GetFolderNotSelectedMessage();
+                return false;
+            }
+
+            if (SelectedLanguage == null || string.IsNullOrEmpty(SelectedLanguage?.Locale))
+            {
+                TranscriptionInfoBar = InformationMessageProvider.GetNoSelectLanguageMessage();
+                return false;
+            }
+
+            if (GenerateSingleFile && string.IsNullOrEmpty(OutputFilePath))
+            {
+                TranscriptionInfoBar = InformationMessageProvider.GetNoSelectOutputFileMessage();
+                return false;
+            }
+
+            if (_audioFileCountingService.ValidWavFiles(OpenedFolderPath) == 0)
+            {
+                TranscriptionInfoBar = InformationMessageProvider.GetNoWavFilesInFolderMessage();
+                return false;
+            }
+
+            return true;
+        }
+
+        private async Task SaveUserSelectionsAsync()
+        {
+            _userSettings.TranscriptionSettings.IsSigleFileExportMode = GenerateSingleFile;
+            _userSettings.TranscriptionSettings.OpenFolderPath = OpenedFolderPath;
+            _userSettings.TranscriptionSettings.Language = SelectedLanguage;
+
+            await _userSettingsService.SaveSettingsAsync(_userSettings);
         }
 
         [RelayCommand]
