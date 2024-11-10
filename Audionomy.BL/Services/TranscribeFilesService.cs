@@ -87,7 +87,7 @@
 
                     await Task.Delay(500, cancellationToken);
 
-                    var outputPath = Path.Combine(options.OutputDirectory, $"{Path.GetFileNameWithoutExtension(file.Name)}.txt");
+                    var outputPath = Path.Combine(options.OutputDirectory, $"{Path.GetFileNameWithoutExtension(file.Name)}_{options.Language}.txt");
 
                     await using var streamWriter = new StreamWriter(outputPath, false);
                     await streamWriter.WriteLineAsync(text);

@@ -38,6 +38,9 @@
         private string _outputFolderPath = string.Empty;
 
         [ObservableProperty]
+        private string _outputFilePath = string.Empty;
+
+        [ObservableProperty]
         private VoiceLanguageModel? _selectedLanguage = new VoiceLanguageModel();
 
         [ObservableProperty]
@@ -165,6 +168,29 @@
 
             NumberOfAudioFiles = _audioFileCountingService.ValidWavFiles(openFolderDialog.FolderNames[0]).ToString("D0");
             OutputFolderPath = string.Join("\n", openFolderDialog.FolderNames);
+        }               
+        
+        [RelayCommand]
+        public void OpenOutputFile()
+        {
+            TranscriptionInfoBar = new InfoMessageModel();
+            Progress = new ProgressViewModel();
+
+            SaveFileDialog saveFileDialog = new()
+            {
+                FileName = $"Transcription_{SelectedLanguage?.Locale}_{DateTime.Now:yyyyMMddHHmm}.txt",
+                DefaultExt = "txt",
+                Filter = "Text File(*.txt)|*.txt",
+                AddExtension = false,
+                InitialDirectory = OutputFolderPath,
+            };
+
+            if (saveFileDialog.ShowDialog() != true)
+            {
+                return;
+            }
+
+            OutputFilePath = saveFileDialog.FileName;
         }
 
         [RelayCommand]
@@ -185,24 +211,8 @@
                 var outputFielName = $"Transcription_{SelectedLanguage?.Locale}_{DateTime.Now:yyyyMMddHHmm}.txt";
                 if (GenerateSingleFile)
                 {
-
-                    SaveFileDialog saveFileDialog = new()
-                    {
-                        FileName = outputFielName,
-                        DefaultExt = "txt",
-                        Filter = "Text File(*.txt)|*.txt",
-                        AddExtension = false,
-                        InitialDirectory = OutputFolderPath,
-                    };
-
-                    if (saveFileDialog.ShowDialog() != true)
-                    {
-                        return;
-                    }
-
-                    var filePath = saveFileDialog.FileName;
-                    outputdirectory = filePath.GetFolderName();
-                    outputFielName = filePath.GetFilename();
+                    outputdirectory = OutputFilePath.GetFolderName();
+                    outputFielName = OutputFilePath.GetFilename();
                 }
 
 
@@ -276,6 +286,12 @@
             if (SelectedLanguage == null || string.IsNullOrEmpty(SelectedLanguage?.Locale))
             {
                 TranscriptionInfoBar = InformationMessageProvider.GetNoSelectLanguageMessage();
+                return false;
+            }
+
+            if (GenerateSingleFile && string.IsNullOrEmpty(OutputFilePath))
+            {
+                TranscriptionInfoBar = InformationMessageProvider.GetNoSelectOutputFileMessage();
                 return false;
             }
 

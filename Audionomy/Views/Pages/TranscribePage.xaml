@@ -18,9 +18,10 @@
     <Page.Resources>
         <converters:BooleanNegationConverter
             x:Key="BooleanNegationConverter" />
+        <converters:BooleanVisibilityConvertor
+            x:Key="BooleanVisibilityConvertor" />
         <converters:BooleanInverseVisibilityConvertor
             x:Key="BooleanInverseVisibilityConvertor" />
-    
     </Page.Resources>
 
     <Grid>
@@ -184,6 +185,39 @@
                 Visibility="{Binding ViewModel.GenerateSingleFile, Converter={StaticResource BooleanInverseVisibilityConvertor}}"
                 IsEnabled="{Binding ViewModel.RequiresConfiguration, Converter={StaticResource BooleanNegationConverter}}"
                 Command="{Binding ViewModel.OpenOutputFolderCommand}"
+                ToolTipService.ToolTip="Select folder"
+                VerticalAlignment="Stretch"
+                Icon="{ui:SymbolIcon Symbol=FolderOpen20, Filled=True}" />
+
+            <ui:TextBlock
+                Grid.Row="4"
+                Grid.Column="0"
+                Margin="0,15,0,0"
+                Visibility="{Binding ViewModel.GenerateSingleFile, Converter={StaticResource BooleanVisibilityConvertor}}"
+                FontSize="{DynamicResourceExtension ControlContentThemeFontSize}"
+                VerticalAlignment="Center"
+                Text="Output File" />
+
+            <ui:TextBox
+                Grid.Row="4"
+                Grid.Column="1"
+                Margin="0,15,0,0"
+                Visibility="{Binding ViewModel.GenerateSingleFile, Converter={StaticResource BooleanVisibilityConvertor}}"
+                FontSize="{DynamicResourceExtension ControlContentThemeFontSize}"
+                VerticalAlignment="Center"
+                PlaceholderText="Select file..."
+                Text="{Binding ViewModel.OutputFilePath}"
+                ToolTipService.ToolTip="{Binding ViewModel.OutputFilePath}" 
+                IsReadOnly="True"
+                IsEnabled="False" />
+
+            <ui:Button
+                Grid.Row="4"
+                Grid.Column="2"
+                Margin="10,15,0,0"
+                Visibility="{Binding ViewModel.GenerateSingleFile, Converter={StaticResource BooleanVisibilityConvertor}}"
+                IsEnabled="{Binding ViewModel.RequiresConfiguration, Converter={StaticResource BooleanNegationConverter}}"
+                Command="{Binding ViewModel.OpenOutputFileCommand}"
                 ToolTipService.ToolTip="Select folder"
                 VerticalAlignment="Stretch"
                 Icon="{ui:SymbolIcon Symbol=FolderOpen20, Filled=True}" />
