@@ -6,6 +6,7 @@
     using CommunityToolkit.Mvvm.ComponentModel;
     using CommunityToolkit.Mvvm.Input;
     using System.Collections.ObjectModel;
+    using System.Windows;
     using Wpf.Ui.Controls;
 
     public partial class SettingsViewModel : ObservableObject, INavigationAware
@@ -22,7 +23,13 @@
         private string _azureLocation = String.Empty;
 
         [ObservableProperty]
-        private bool _isLanguageSelectionTabEnabled = false;
+        private bool _isLanguageSelectionTabEnabled = false;        
+      
+        [ObservableProperty]
+        private int? _initialSilenceTimeoutSec = null;
+
+        [ObservableProperty]
+        private int? _endSilenceTimeoutSec = null;
 
         [ObservableProperty]
         private ObservableCollection<VoiceLanguageModel> _availableLanguages = [];

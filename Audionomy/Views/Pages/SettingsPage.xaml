@@ -225,7 +225,7 @@
                         BorderThickness="1,1,1,0"
                         CornerRadius="8">
                         <ui:ListView
-                            MouseDoubleClick="RevoveLanguage_Click"
+                            MouseDoubleClick="RemoveLanguage_Click"
                             KeyDown="RemoveLanguage_KeyDown"
                             MaxHeight="250"
                             d:ItemsSource="{d:SampleData ItemCount=2}"
@@ -250,6 +250,107 @@
                         Text="Double-click a language to add or remove it from your selection." />
                 </Grid>
             </Border>
+        </TabItem>
+        <TabItem
+            IsSelected="True"
+            ToolTipService.ToolTip="Transcription Options"
+            Visibility="Hidden">
+            <TabItem.Header>
+                <StackPanel
+                    Orientation="Horizontal">
+                    <ui:SymbolIcon
+                        Margin="0,0,6,0"
+                        Symbol="Cloud16" />
+                    <TextBlock
+                        Text="Transcription Options" />
+                </StackPanel>
+            </TabItem.Header>
+            <Grid
+                VerticalAlignment="Stretch">
+                <Grid.RowDefinitions>
+                    <RowDefinition
+                        Height="Auto" />
+                    <RowDefinition
+                        Height="Auto" />
+                    <RowDefinition
+                        Height="*" />
+                    <RowDefinition
+                        Height="Auto" />
+                </Grid.RowDefinitions>
+                <Border
+                    VerticalAlignment="Top"
+                    Grid.Row="0"
+                    Padding="16"
+                    Background="{ui:ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ui:ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1,1,1,0"
+                    CornerRadius="0,0,8,8"
+                    HorizontalAlignment="Stretch">
+                    <StackPanel>
+                        <StackPanel
+                            Margin="0,0,0,5">
+                            <StackPanel
+                                Orientation="Horizontal"
+                                VerticalAlignment="Center">
+                                <Label
+                                    Padding="0,0,20,5"
+                                    VerticalAlignment="Center"
+                                    Content="Initial Silence Timeout (seconds)" />
+                                <CheckBox
+                                    VerticalAlignment="Center"
+                                    Content="Default">
+                                </CheckBox>
+                            </StackPanel>
+                            <ui:NumberBox
+                                MaxDecimalPlaces="0"
+                                Minimum="1"
+                                Maximum="60"
+                                Value="{Binding InitialSilenceTimeoutSec, Mode=TwoWay}" />
+                        </StackPanel>
+                        <StackPanel
+                            Margin="0,10,0,0">
+                            <StackPanel
+                                Orientation="Horizontal"
+                                VerticalAlignment="Center">
+                                <Label
+                                    Padding="0,0,20,5"
+                                    VerticalAlignment="Center"
+                                    Content="End Silence Timeout (seconds)" />
+                                <CheckBox
+                                    VerticalAlignment="Center"
+                                    Content="Default">
+                                </CheckBox>
+                            </StackPanel>
+
+                            <ui:NumberBox
+                                MaxDecimalPlaces="0"
+                                Minimum="1"
+                                Maximum="60"
+                                SpinButtonPlacementMode="Hidden"
+                                ValidationMode="InvalidInputOverwritten"
+                                
+                                Value="{Binding EndSilenceTimeoutSec, Mode=TwoWay}"
+                                AcceptsExpression="True"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+                <ui:Button
+                    Grid.Row="1"
+                    HorizontalAlignment="Right"
+                    Width="150"
+                    Margin="0,10,0,0"
+                    Command="{Binding ViewModel.SaveAzureCredentialsCommand, Mode=OneWay}"
+                    Content="Save"
+                    Icon="Fluent24" />
+                <ui:InfoBar
+                    Title="{Binding ViewModel.AzureInfoBar.Title}"
+                    IsClosable="{Binding ViewModel.AzureInfoBar.IsClosable}"
+                    Grid.Row="3"
+                    VerticalAlignment="Bottom"
+                    Message="{Binding ViewModel.AzureInfoBar.Message, Mode=TwoWay}"
+                    Severity="{Binding ViewModel.AzureInfoBar.Severity}"
+                    IsOpen="{Binding ViewModel.AzureInfoBar.IsOpen, Mode=TwoWay}" />
+            </Grid>
         </TabItem>
     </TabControl>
 </Page>

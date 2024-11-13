@@ -24,7 +24,7 @@
             }
         }
 
-        private void RevoveLanguage_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void RemoveLanguage_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             if (e.Source is ListView list && list.SelectedItem is VoiceLanguageModel languageModel)
             {

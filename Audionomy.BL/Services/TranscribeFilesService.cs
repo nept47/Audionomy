@@ -37,7 +37,16 @@
             var settings = await _settingsService.LoadSettingsAsync();
             var speechConfig = SpeechConfig.FromSubscription(settings.Key, settings.Region);
             speechConfig.SpeechRecognitionLanguage = options.Language;
-
+           
+            if (options.InitialSilenceTimeoutMs != null)
+            {
+                speechConfig.SetProperty(PropertyId.SpeechServiceConnection_InitialSilenceTimeoutMs, options.InitialSilenceTimeoutMs.ToString());
+            }
+            if (options.EndSilenceTimeoutMs != null)
+            {
+                speechConfig.SetProperty(PropertyId.SpeechServiceConnection_EndSilenceTimeoutMs, options.EndSilenceTimeoutMs.ToString());
+            }
+           
             var totalFileCount = wavFiles.Count;
             var transcribedFileCount = 0;
 
@@ -63,7 +72,7 @@
                     progress?.Report(new TranscriptionResultModel(file.Name, totalFileCount, transcribedFileCount));
 
                     var text = await AudioToTextAsync(speechConfig, file.FullName, cancellationToken);
-                    
+
                     await using var streamWriter = new StreamWriter(outputPath, append: true);
                     await streamWriter.WriteLineAsync($"{file.Name}|{text}");
 
